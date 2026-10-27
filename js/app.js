@@ -3,7 +3,7 @@
 
 (function () {
   const { $, esc, ico, ctl, qtyOf, toast, fly, countTo, haptic, closeSheet } = window.UI;
-  const C = window.CAFE, M = window.MENU, cart = window.Cart;
+  const C = window.CAFE, M = window.MENU, cart = window.Cart, stats = window.Stats;
   const Menu = window.MenuView, Order = window.OrderView;
   const VIEWS = ["menu", "search", "order", "cafe"];
 
@@ -52,6 +52,7 @@
     $("quick").hidden = !!q;
     if (!q) { $("results").innerHTML = ""; return; }
     const found = all.filter((x) => q.split(/\s+/).every((w) => x.hay.includes(w))).map((x) => x.it);
+    stats.search(q, found.length > 0);
     $("results").innerHTML = found.length
       ? `<p class="results-head">Найдено: ${found.length}</p><div class="grid">${found.map(Menu.card).join("")}</div>`
       : `<div class="blank"><div class="blank-art">${ico.search}</div><h2>Ничего не нашли</h2><p>Попробуйте другое слово: «пицца», «ролл», «шаурма».</p></div>`;
@@ -77,6 +78,7 @@
     scrollTo(0, scrollMemo[next] || 0);
     if (next === "menu") Menu.refreshChips();
     if (next === "search" && matchMedia("(hover: hover)").matches) $("q").focus({ preventScroll: true });
+    stats.screen(next);
   }
   addEventListener("hashchange", route);
   route();
@@ -88,6 +90,7 @@
       e.stopPropagation();
       const key = add.dataset.add, first = !cart.qty(key);
       cart.add(key);
+      stats.added(key);
       haptic();
       const it = cart.byId[key.split("@")[0]];
       requestAnimationFrame(() => fly(add, it && it.photo));

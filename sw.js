@@ -2,11 +2,11 @@
 // Нет сети: отдаём последнюю сохранённую копию. Фото блюд берём из копии: они не меняются.
 // На xasi88.github.io живут и другие приложения автора (статистика, сайты): чужие копии не трогаем.
 
-const CACHE = "ramburger-v2";
+const CACHE = "ramburger-v3";
 const CORE = [
   "./", "index.html", "data/menu.js", "manifest.webmanifest",
   "css/base.css", "css/menu.css", "css/views.css",
-  "js/data.js", "js/icons.js", "js/cart.js", "js/ui.js", "js/menu.js", "js/order.js", "js/app.js", "js/install.js",
+  "js/data.js", "js/icons.js", "js/cart.js", "js/ui.js", "js/stats.js", "js/menu.js", "js/order.js", "js/app.js", "js/install.js",
   "img/icon-192.png", "img/food/combo1.webp",
 ];
 

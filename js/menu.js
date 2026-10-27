@@ -2,7 +2,7 @@
 
 window.MenuView = (function () {
   const { $, esc, ico, art, price, ctl, observe, openSheet, reduced } = window.UI;
-  const C = window.CAFE, M = window.MENU, D = window.Data, cart = window.Cart;
+  const C = window.CAFE, M = window.MENU, D = window.Data, cart = window.Cart, stats = window.Stats;
   const groupOf = {};
   M.forEach((g) => g.items.forEach((it) => { groupOf[it.id] = g; }));
 
@@ -73,6 +73,7 @@ window.MenuView = (function () {
       if (!c) return;
       lock = Date.now() + 900;
       place(c.dataset.cat, true);
+      stats.section(c.textContent);
       $("g-" + c.dataset.cat).scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
     });
 
@@ -114,6 +115,7 @@ window.MenuView = (function () {
     $("dDesc").hidden = !it.desc;
     fill();
     openSheet($("sheet"));
+    stats.opened(key);
   }
 
   $("dOpts").addEventListener("click", (e) => {

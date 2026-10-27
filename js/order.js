@@ -59,7 +59,9 @@ window.OrderView = (function () {
         input.classList.remove("invalid"); void input.offsetWidth; input.classList.add("invalid");
         input.focus();
         toast("Напишите адрес доставки");
+        return;
       }
+      if (send) window.Stats.order(cart.lines(), state.mode, total());
     });
     el.addEventListener("input", (e) => {
       const f = e.target.dataset.f;
