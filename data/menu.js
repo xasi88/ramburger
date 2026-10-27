@@ -16,7 +16,7 @@ window.MENU_DATA = {
     "phoneText": "+7 928 002-68-80",
     "instagram": "_ramburger_",
     "delivery": 150,
-    "demo": true
+    "demo": false
   },
   "menu": [
     {
