@@ -1,7 +1,8 @@
 // Работа без сети. Сначала сеть, чтобы гость сразу видел новые цены.
 // Нет сети: отдаём последнюю сохранённую копию. Фото блюд берём из копии: они не меняются.
+// На xasi88.github.io живут и другие приложения автора (статистика, сайты): чужие копии не трогаем.
 
-const CACHE = "ramburger-v1";
+const CACHE = "ramburger-v2";
 const CORE = [
   "./", "index.html", "data/menu.js", "manifest.webmanifest",
   "css/base.css", "css/menu.css", "css/views.css",
@@ -14,7 +15,7 @@ self.addEventListener("install", (e) => {
 });
 
 self.addEventListener("activate", (e) => {
-  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("ramburger-") && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", (e) => {
