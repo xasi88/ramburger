@@ -1,0 +1,160 @@
+/* Основа: цвета и шрифты брендбука, шапка, кнопки, кнопка корзины, окно, подсказка */
+
+:root {
+  /* Брендбук «Рамбургер»: docs/Брендбук Рамбургер.md */
+  --mustard: #EFB017;
+  --tile: #FCCB55;
+  --cream: #FFF4D6;
+  --coal: #141210;
+  --red: #DE2923;
+  --tobacco: #5A4524;
+  --wa: #16803F;
+  --wa-dark: #116633;
+  --line: rgba(20, 18, 16, 0.1);
+  --shadow: 0 10px 22px -14px rgba(90, 60, 0, 0.55), 0 2px 4px -2px rgba(90, 60, 0, 0.25);
+  --shadow-lift: 0 22px 40px -18px rgba(70, 45, 0, 0.6);
+  --head: "Montserrat Alternates", "Montserrat", system-ui, sans-serif;
+  --body: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.45, 0.64, 1);
+  --appbar-h: 64px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --wrap: 1240px;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--appbar-h) + 72px); background: var(--mustard); }
+body {
+  margin: 0; min-height: 100svh; background: var(--mustard); color: var(--coal);
+  font: 500 16px/1.45 var(--body);
+  overflow-x: hidden; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased;
+}
+body.has-cart { padding-bottom: calc(88px + var(--safe-b)); }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+svg { display: block; }
+svg.i { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+h1, h2, h3, p { margin: 0; overflow-wrap: break-word; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--coal); outline-offset: 2px; border-radius: 10px; }
+
+/* Шапка: знак кафе, имя, открыто ли сейчас, поиск и «о кафе» */
+.appbar {
+  position: sticky; top: 0; z-index: 30; height: var(--appbar-h);
+  padding-top: env(safe-area-inset-top, 0px); box-sizing: content-box;
+  background: rgba(239, 176, 23, 0.9); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid transparent; transition: border-color 0.3s;
+}
+.appbar.scrolled { border-bottom-color: var(--line); }
+.appbar-in { height: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; margin-right: auto; }
+.brand-mark { flex: none; width: 46px; height: 46px; border-radius: 50%; box-shadow: 0 6px 14px -6px rgba(20, 18, 16, 0.6); transition: transform 0.5s var(--spring); }
+.brand:active .brand-mark { transform: rotate(-12deg) scale(0.94); }
+.brand-mark svg { width: 100%; height: 100%; }
+.brand-text { display: grid; line-height: 1.1; min-width: 0; }
+.brand-text b { font: 800 22px/1.05 var(--head); color: var(--red); letter-spacing: -0.01em; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--coal); white-space: nowrap; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--wa); box-shadow: 0 0 0 3px rgba(22, 128, 63, 0.18); }
+.status.closed::before { background: var(--red); box-shadow: 0 0 0 3px rgba(222, 41, 35, 0.18); }
+.tools { display: flex; gap: 8px; }
+.tool {
+  width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+  background: var(--cream); color: var(--coal); text-decoration: none; box-shadow: var(--shadow);
+  transition: transform 0.4s var(--spring), background 0.2s;
+}
+.tool svg { width: 22px; height: 22px; }
+.tool:active { transform: scale(0.9); }
+.tool.on { background: var(--coal); color: #fff; }
+
+/* Кнопки: прямоугольник со скруглением, как ценник */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 22px; border: 0; border-radius: 14px;
+  font: 700 16px/1.2 var(--body); text-decoration: none; text-align: center;
+  transition: transform 0.4s var(--spring), background 0.2s, box-shadow 0.2s;
+}
+.btn svg { width: 22px; height: 22px; flex: none; }
+.btn:active { transform: scale(0.96); }
+.btn-main { background: var(--coal); color: #fff; }
+.btn-wa { background: var(--wa); color: #fff; box-shadow: 0 12px 24px -12px rgba(17, 102, 51, 0.8); }
+.btn-wa:hover { background: var(--wa-dark); }
+.btn-soft { background: var(--cream); color: var(--coal); box-shadow: inset 0 0 0 2px var(--coal); }
+.btn-wide { width: 100%; }
+
+/* Кнопка корзины внизу: появляется с первым блюдом */
+.cartbar {
+  position: fixed; z-index: 40; left: 12px; right: 12px; bottom: calc(12px + var(--safe-b));
+  max-width: 560px; margin: 0 auto; min-height: 64px; padding: 8px 8px 8px 10px;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--coal); color: #fff; border-radius: 18px; text-decoration: none;
+  box-shadow: 0 18px 36px -14px rgba(20, 18, 16, 0.75);
+  transform: translateY(calc(100% + 40px)); transition: transform 0.6s var(--spring);
+}
+.cartbar.show { transform: none; }
+.cartbar.bump { animation: bump 0.45s var(--spring); }
+.cartbar:active { transform: scale(0.98); }
+body[data-view="order"] .cartbar { display: none; }
+body[data-view="order"].has-cart { padding-bottom: 0; }
+.cb-bag { position: relative; flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--mustard); color: var(--coal); display: grid; place-items: center; }
+.cb-bag svg { width: 24px; height: 24px; }
+.cb-bag i {
+  position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+  background: var(--red); color: #fff; font: 800 12.5px/22px var(--body); font-style: normal; text-align: center;
+  box-shadow: 0 0 0 2px var(--coal);
+}
+.cb-text { display: grid; gap: 3px; margin-right: auto; font-weight: 600; font-size: 12.5px; line-height: 1; color: #FFE9B8; }
+.cb-sum { font: 800 19px/1 var(--body); color: #fff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cb-go {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 48px; padding: 0 8px 0 16px; border-radius: 12px;
+  background: var(--mustard); color: var(--coal); font-weight: 800; font-size: 15px;
+}
+.cb-go svg { width: 20px; height: 20px; stroke-width: 2.6; }
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.045); } 100% { transform: scale(1); } }
+
+/* Самый узкий телефон (320 точек): шапка и кнопка корзины компактнее */
+@media (max-width: 359px) {
+  .brand-mark { width: 40px; height: 40px; }
+  .brand-text b { font-size: 19px; }
+  .st-more { display: none; }
+  .cartbar { gap: 8px; }
+  .cb-bag { width: 42px; height: 42px; }
+  .cb-go { padding: 0 4px 0 12px; font-size: 14px; }
+}
+
+/* Окно блюда: снизу на телефоне, по центру на большом экране */
+.sheet { position: fixed; inset: 0; z-index: 50; visibility: hidden; transition: visibility 0s 0.45s; }
+.sheet.open { visibility: visible; transition: none; }
+.sheet-bg { position: absolute; inset: 0; background: rgba(20, 18, 16, 0.55); opacity: 0; transition: opacity 0.35s; }
+.sheet.open .sheet-bg { opacity: 1; }
+.sheet-card {
+  position: absolute; left: 0; right: 0; bottom: 0; max-height: 92svh; overflow: auto; overscroll-behavior: contain;
+  background: var(--cream); border-radius: 24px 24px 0 0; padding-bottom: var(--safe-b); outline: none;
+  transform: translateY(105%); transition: transform 0.5s var(--spring);
+}
+.sheet.open .sheet-card { transform: none; }
+.sheet-x {
+  position: absolute; z-index: 2; top: 12px; right: 12px; width: 44px; height: 44px; border: 0; border-radius: 12px;
+  background: rgba(255, 244, 214, 0.92); color: var(--coal); display: grid; place-items: center; box-shadow: var(--shadow);
+}
+.sheet-x svg { width: 22px; height: 22px; }
+@media (min-width: 768px) {
+  .sheet-card { left: 50%; right: auto; bottom: auto; top: 50%; width: 520px; max-height: 88vh; border-radius: 24px; transform: translate(-50%, -46%) scale(0.96); opacity: 0; transition: transform 0.45s var(--spring), opacity 0.25s; }
+  .sheet.open .sheet-card { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+/* Подсказка и летящее блюдо */
+.toast {
+  position: fixed; z-index: 60; left: 50%; bottom: calc(92px + var(--safe-b)); max-width: calc(100% - 32px);
+  padding: 12px 16px; border-radius: 12px; background: var(--coal); color: #fff; font-weight: 600; font-size: 14.5px;
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: transform 0.4s var(--spring), opacity 0.25s;
+}
+.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.flyer {
+  position: fixed; z-index: 70; top: 0; left: 0; width: 44px; height: 44px; border-radius: 12px; opacity: 0; pointer-events: none;
+  background: var(--tile) center / cover no-repeat; box-shadow: 0 0 0 2px #fff, 0 10px 20px -8px rgba(20, 18, 16, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

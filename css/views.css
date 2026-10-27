@@ -1,0 +1,127 @@
+/* Экраны: поиск, заказ, кафе, заказ сбоку на большом экране, установка на телефон */
+
+.page { max-width: 640px; margin: 0 auto; padding: 4px 16px 40px; animation: rise 0.45s var(--ease) both; }
+.back {
+  display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding-right: 10px; margin-left: -6px;
+  font-weight: 700; font-size: 15px; text-decoration: none; color: var(--coal);
+}
+.back svg { width: 24px; height: 24px; stroke-width: 2.4; }
+.page-title { font: 800 28px/1.15 var(--head); margin: 2px 0 16px; }
+
+/* Поиск */
+.searchbox {
+  display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 4px 0 14px; border-radius: 14px;
+  background: var(--cream); box-shadow: var(--shadow);
+}
+.searchbox svg { width: 22px; height: 22px; flex: none; color: var(--tobacco); }
+.searchbox input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font-size: 16px; outline: none; }
+.searchbox input::-webkit-search-cancel-button { display: none; }
+.searchbox .clear { width: 44px; height: 44px; border: 0; background: none; font-size: 26px; line-height: 1; color: var(--tobacco); }
+.quick { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+.quick button { height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: rgba(255, 244, 214, 0.6); font-weight: 700; font-size: 14.5px; }
+.quick button:active { background: var(--coal); color: #fff; }
+.results { margin-top: 12px; }
+.results-head { margin-bottom: 10px; font-size: 13.5px; font-weight: 700; color: var(--tobacco); }
+
+/* Пустой экран */
+.blank { display: grid; justify-items: center; gap: 8px; padding: 28px 12px; text-align: center; }
+.blank-art { width: 120px; height: 120px; display: grid; place-items: center; border-radius: 50%; background: var(--cream); animation: pop 0.6s var(--spring) both; }
+.blank-art svg { width: 76px; height: 76px; }
+.blank-art svg.i { width: 48px; height: 48px; }
+.blank h2 { font: 800 21px/1.2 var(--body); margin-top: 6px; }
+.blank p { max-width: 32ch; font-size: 14.5px; color: var(--tobacco); }
+.blank .btn { margin-top: 10px; }
+
+/* Заказ */
+.o-list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 10px; }
+.o-line {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) 116px; align-items: center; gap: 10px;
+  padding: 8px; border-radius: 16px; background: var(--cream); box-shadow: var(--shadow); animation: rise 0.4s var(--ease) both;
+}
+.o-line .art { width: 56px; height: 56px; aspect-ratio: auto; border-radius: 12px; }
+.o-line .art > svg { width: 80%; }
+.o-line b { display: block; font-size: 14.5px; line-height: 1.25; }
+.o-line span { font-size: 12.5px; color: var(--tobacco); font-variant-numeric: tabular-nums; }
+.o-line [data-ctl] .ctl.has { height: 44px; }
+.o-section { display: grid; gap: 12px; padding: 14px; border-radius: 18px; background: var(--cream); box-shadow: var(--shadow); }
+.o-label { font-size: 13px; font-weight: 700; color: var(--tobacco); }
+.seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 14px; background: rgba(20, 18, 16, 0.08); }
+.seg-pill { position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: calc(100% - 8px); border-radius: 11px; background: var(--coal); transition: transform 0.5s var(--spring); }
+.seg button {
+  position: relative; z-index: 1; height: 50px; border: 0; background: none; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15.5px; transition: color 0.3s;
+}
+.seg button svg { width: 22px; height: 22px; }
+.seg button[aria-checked="true"] { color: #fff; }
+.field { display: grid; gap: 6px; }
+.field input {
+  height: 52px; padding: 0 14px; border: 2px solid rgba(20, 18, 16, 0.16); border-radius: 12px; background: #fff;
+  font-size: 16px; outline: none; transition: border-color 0.2s;
+}
+.field input:focus { border-color: var(--coal); }
+.field input.invalid { border-color: var(--red); animation: shake 0.4s; }
+@keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+.o-sums { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin: 16px 4px 6px; font-size: 15px; font-weight: 600; }
+.o-sums b { font-variant-numeric: tabular-nums; }
+.o-total { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 4px 14px; padding-top: 10px; border-top: 2px dashed rgba(20, 18, 16, 0.25); }
+.o-total span { font: 800 20px/1 var(--body); }
+.o-total b { font: 800 28px/1 var(--body); font-variant-numeric: tabular-nums; }
+[data-full] .btn-wa { min-height: 58px; font-size: 17px; }
+.o-hint { margin-top: 10px; text-align: center; font-size: 13px; color: var(--tobacco); }
+.o-clear { display: block; min-height: 44px; margin: 6px auto 0; padding: 0 12px; border: 0; background: none; font-weight: 600; font-size: 14px; color: var(--tobacco); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Кафе */
+.cafe-hero { display: grid; justify-items: center; gap: 8px; text-align: center; padding: 4px 0 18px; }
+.cafe-logo { width: 132px; height: 132px; border-radius: 50%; box-shadow: var(--shadow-lift); animation: pop 0.7s var(--spring) both; }
+.cafe-logo svg { width: 100%; height: 100%; }
+.cafe-hero h1 { font: 800 28px/1.15 var(--head); margin-top: 6px; }
+.cafe-hero p { max-width: 34ch; color: var(--tobacco); font-weight: 600; }
+.rows { border-radius: 18px; overflow: hidden; background: var(--cream); box-shadow: var(--shadow); }
+.row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 22px; align-items: center; gap: 12px; min-height: 66px; padding: 10px 14px; text-decoration: none; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row i { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--mustard); }
+.row i svg { width: 22px; height: 22px; }
+.row b { display: block; font-size: 15px; }
+.row span { font-size: 13px; color: var(--tobacco); }
+.row .go { width: 20px; height: 20px; color: var(--tobacco); }
+.cafe-cta { display: grid; gap: 10px; margin-top: 16px; }
+
+/* Большой экран: заказ стоит справа от меню, кнопка корзины в меню не нужна */
+@media (min-width: 1024px) {
+  .menu-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 28px; align-items: start; }
+  .side-order {
+    display: block; position: sticky; top: calc(var(--appbar-h) + 16px); max-height: calc(100vh - var(--appbar-h) - 32px); overflow: auto;
+    margin-top: 6px; padding: 16px; border-radius: 22px; background: rgba(255, 244, 214, 0.55); box-shadow: var(--shadow);
+  }
+  .side-order .page-title { font-size: 22px; margin-bottom: 12px; }
+  .side-order .blank { padding: 12px 0; }
+  .side-order .blank-art { width: 96px; height: 96px; }
+  .side-order .o-line { grid-template-columns: 48px minmax(0, 1fr) 112px; }
+  .side-order .o-line .art { width: 48px; height: 48px; }
+  body[data-view="menu"] .cartbar { display: none; }
+  body[data-view="menu"].has-cart { padding-bottom: 0; }
+}
+
+/* Приглашение установить на телефон */
+.install-card {
+  position: fixed; z-index: 45; left: 12px; right: 12px; bottom: calc(12px + var(--safe-b)); max-width: 560px; margin: 0 auto;
+  display: grid; grid-template-columns: 48px minmax(0, 1fr) auto 44px; align-items: center; gap: 10px; padding: 10px;
+  border-radius: 18px; background: var(--cream); box-shadow: var(--shadow-lift);
+  transform: translateY(calc(100% + 40px)); transition: transform 0.6s var(--spring);
+}
+body.has-cart .install-card { bottom: calc(88px + var(--safe-b)); }
+.install-card.show { transform: none; }
+.install-card img { border-radius: 12px; }
+.install-card b { display: block; font-size: 14.5px; }
+.install-card span { display: block; font-size: 12.5px; color: var(--tobacco); }
+.install-card .btn { min-height: 44px; padding: 0 14px; font-size: 14.5px; }
+.inst-x { width: 44px; height: 44px; border: 0; background: none; display: grid; place-items: center; color: var(--tobacco); }
+.inst-x svg { width: 20px; height: 20px; }
+.inst-card { padding: 28px 20px 20px; text-align: center; }
+.inst-logo { margin: 0 auto 10px; border-radius: 22px; }
+.inst-card h2 { font: 800 21px/1.2 var(--body); }
+.inst-sub { margin: 8px auto 16px; max-width: 34ch; color: var(--tobacco); font-size: 14.5px; }
+.inst-steps { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; text-align: left; }
+.inst-steps li { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 12px; font-size: 14.5px; }
+.inst-steps i { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--mustard); }
+.inst-steps svg { width: 22px; height: 22px; }

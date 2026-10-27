@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Рамбургер · Меню и заказ в WhatsApp</title>
+  <meta name="robots" content="noindex">
+  <meta name="description" content="Меню кафе «Рамбургер»: комбо, бургеры, шаурма, пицца и роллы. Соберите заказ и отправьте его в WhatsApp кафе. Доставка 150 ₽.">
+  <meta name="theme-color" content="#EFB017">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_RU">
+  <meta property="og:site_name" content="Кафе «Рамбургер»">
+  <meta property="og:title" content="Рамбургер · Меню и заказ в WhatsApp">
+  <meta property="og:description" content="Комбо, бургеры, шаурма, пицца и роллы. Соберите заказ и отправьте его в WhatsApp кафе.">
+  <meta property="og:url" content="https://xasi88.github.io/ramburger/">
+  <meta property="og:image" content="https://xasi88.github.io/ramburger/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Кафе «Рамбургер». Меню и заказ в WhatsApp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://xasi88.github.io/ramburger/img/og.jpg">
+
+  <link rel="icon" href="img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="img/icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Рамбургер">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/views.css">
+</head>
+<body>
+  <header class="appbar">
+    <div class="appbar-in">
+      <a class="brand" href="#menu" aria-label="Кафе «Рамбургер», меню">
+        <span class="brand-mark" id="brandMark"></span>
+        <span class="brand-text"><b>Ramburger</b><span class="status" id="status"></span></span>
+      </a>
+      <nav class="tools" aria-label="Разделы">
+        <a class="tool" href="#search" data-go="search" aria-label="Поиск блюда"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></a>
+        <a class="tool" href="#cafe" data-go="cafe" aria-label="О кафе: адрес и телефон"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="app">
+    <section class="view" id="view-menu" data-view="menu" aria-label="Меню">
+      <div class="menu-layout">
+        <div class="menu-main">
+          <div class="intro" id="intro"></div>
+          <nav class="chips" id="chips" aria-label="Разделы меню"><div class="chips-track" id="chipsTrack"><span class="chips-pill" id="chipsPill"></span></div></nav>
+          <div id="groups"></div>
+          <p class="demo-note" id="demoNote" hidden>Бета-версия меню. Цены уточняйте при заказе.</p>
+        </div>
+        <aside class="side-order" id="sideOrder" aria-label="Ваш заказ"></aside>
+      </div>
+    </section>
+
+    <section class="view" id="view-search" data-view="search" aria-label="Поиск" hidden>
+      <div class="page">
+        <a class="back" href="#menu"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Меню</a>
+        <h1 class="page-title">Поиск</h1>
+        <label class="searchbox">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="q" type="search" placeholder="Пицца, ролл, шаурма…" autocomplete="off" enterkeyhint="search" aria-label="Найти блюдо">
+          <button type="button" class="clear" id="qClear" aria-label="Очистить" hidden>×</button>
+        </label>
+        <div class="quick" id="quick"></div>
+        <div class="results" id="results"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-order" data-view="order" aria-label="Заказ" hidden>
+      <div class="page" id="orderPage"></div>
+    </section>
+
+    <section class="view" id="view-cafe" data-view="cafe" aria-label="О кафе" hidden>
+      <div class="page" id="cafePage"></div>
+    </section>
+  </main>
+
+  <a class="cartbar" id="cartbar" href="#order" aria-label="Открыть корзину">
+    <span class="cb-bag" id="cartbarBag"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><i id="cartbarCount">0</i></span>
+    <span class="cb-text">Корзина<b class="cb-sum" id="cartbarSum">0 ₽</b></span>
+    <span class="cb-go">Оформить<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
+  </a>
+
+  <div class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-bg" data-close></div>
+    <article class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="dName" tabindex="-1">
+      <button class="sheet-x" type="button" data-close aria-label="Закрыть">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="d-art" id="dArt"></div>
+      <div class="d-body">
+        <p class="d-meta" id="dMeta"></p>
+        <h2 class="d-name" id="dName"></h2>
+        <p class="d-desc" id="dDesc"></p>
+        <div class="d-opts" id="dOpts" role="group" aria-label="Размер" hidden></div>
+        <div class="d-buy"><b class="d-price" id="dPrice"></b><div id="dCtl"></div></div>
+      </div>
+    </article>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <span class="flyer" id="flyer" aria-hidden="true"></span>
+
+  <script src="data/menu.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/order.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/install.js"></script>
+</body>
+</html>
