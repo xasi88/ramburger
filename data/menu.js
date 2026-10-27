@@ -14,9 +14,6 @@ window.MENU_DATA = {
     "close": 23,
     "phone": "79280026880",
     "phoneText": "+7 928 002-68-80",
-    "place2": "Алхан-Юрт, ул. Э. Дашаева, 16",
-    "phone2": "79280240771",
-    "phone2Text": "+7 928 024-07-71",
     "instagram": "_ramburger_",
     "delivery": 150,
     "demo": true

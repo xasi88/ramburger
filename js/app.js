@@ -34,7 +34,6 @@
     </div>
     <div class="rows">
       ${row("tel:+" + C.phone, ico.phone, esc(C.phoneText), `${esc(C.place)} · принимает заказы с сайта`, false)}
-      ${C.phone2 ? row("tel:+" + C.phone2, ico.pin, esc(C.place2), esc(C.phone2Text), false) : ""}
       ${row(`https://instagram.com/${C.instagram}`, ico.ig, "@" + esc(C.instagram), "Instagram", true)}
       <div class="row"><i>${ico.clock}</i><div><b>${esc(C.hours)}</b><span>Доставка ${cart.rub(C.delivery)}</span></div><span></span></div>
     </div>

@@ -14,7 +14,6 @@ window.UI = (function () {
     back: line('<path d="M15 6l-6 6 6 6"/>'),
     plus: line('<path d="M12 5v14M5 12h14"/>'),
     minus: line('<path d="M5 12h14"/>'),
-    pin: line('<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
     clock: line('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
     phone: line('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'),
     ig: line('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>'),
