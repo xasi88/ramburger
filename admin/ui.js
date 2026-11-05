@@ -100,11 +100,12 @@ export function createUI(act) {
       const items = g.items.filter((it) => f(it) && hit(it, g));
       if (!items.length && (st.filter !== "all" || q)) return "";
       const shown = !g.hidden;
-      return `<section class="ad-sec">
+      return `<section class="ad-sec${shown ? "" : " ad-sec-off"}">
         <header class="ad-sec-head">
-          <h2>${esc(g.title)} <span>${g.items.filter(L.visible).length} из ${g.items.length}</span></h2>
+          <h2>${esc(g.title)} <span>${shown ? `${g.items.filter(L.visible).length} из ${g.items.length}` : "скрыт"}</span></h2>
           <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
         </header>
+        ${shown ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
         ${items.map(row).join("")}
       </section>`;
     }).join("");
@@ -261,12 +262,23 @@ export function createUI(act) {
     if (t.id === "adAdd") return editor(null);
     if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email); return; }
     if (d.edit) return editor(d.edit);
+    // Тумблеры меняются на экране сразу, запись в базу идёт следом. Не записалось: тумблер встаёт назад.
     if (d.toggle) {
       const it = all().find((x) => x.it.id === d.id).it;
       if (d.toggle === "show" && it.hidden && (!it.name || !L.priced(it))) { toast("Сначала впишите название и цену"); return editor(it.id); }
-      return act.patch(it.id, d.toggle === "show" ? { hidden: !it.hidden } : { hit: !it.hit });
+      const key = d.toggle === "show" ? "hidden" : "hit", was = !!it[key];
+      it[key] = !was;
+      list();
+      if (!(await act.patch(it.id, { [key]: !was }))) { it[key] = was; list(); }
+      return;
     }
-    if (d.sec) { const g = st.menu.menu.find((x) => x.id === d.sec); return act.section(g.id, !g.hidden); }
+    if (d.sec) {
+      const g = st.menu.menu.find((x) => x.id === d.sec), was = !!g.hidden;
+      g.hidden = !was;
+      list();
+      if (!(await act.section(g.id, !was))) { g.hidden = was; list(); }
+      return;
+    }
     if (d.unadmin) return act.team(st.admins.filter((e) => e !== d.unadmin));
     if (!st.ed) { if (d.close !== undefined) closeSheet(); return; }
     // Дальше кнопки окна блюда

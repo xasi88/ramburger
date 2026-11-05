@@ -1,6 +1,7 @@
 // Запуск меню: сначала правки админки из базы, потом всё остальное.
-// Ждём базу до 2,5 секунды, чтобы гость не увидел старую цену или скрытое блюдо.
-// Нет сети или база молчит: последняя полученная копия правок, иначе меню из файла.
+// Запрос к базе уходит ещё из <head> (js/live.js, Live.pending). Ждём ответ: с копией правок в браузере до 4 с,
+// без копии до 8 с. Не дождались: открываем по копии, иначе по файлу меню.
+// Ответ пришёл позже и правки другие: копию обновляем. Гость ещё ничего не нажимал: меню открывается заново один раз.
 
 (function () {
   const L = window.Live;
@@ -8,11 +9,13 @@
   // Номер версии из адреса boot.js (его ставит выложить-сайт.py): все файлы меню из одной выкладки
   const me = document.currentScript && document.currentScript.src;
   const ver = me && me.includes("?v=") ? "?v=" + me.split("?v=")[1] : "";
-  let started = false;
+  const RELOADED = "ramburger-reloaded";
+  let started = false, used = null, touched = false;
 
   function start(live) {
     if (started) return;
     started = true;
+    used = live;
     window.MENU_DATA = L.merge(window.MENU_DATA, live);
     APP.forEach((src) => {
       const s = document.createElement("script");
@@ -22,12 +25,29 @@
     });
   }
 
-  function cached() {
-    try { return JSON.parse(localStorage.getItem(L.CACHE)); } catch (e) { return null; }
-  }
+  const store = {
+    get() { try { return localStorage.getItem(L.CACHE); } catch (e) { return null; } },
+    set(v) { try { localStorage.setItem(L.CACHE, JSON.stringify(v)); } catch (e) { /* без хранилища живём без копии */ } },
+  };
+  const copy = store.get();
+  const cached = () => { try { return JSON.parse(copy); } catch (e) { return null; } };
 
-  L.fetchLive(2500).then((r) => {
-    try { localStorage.setItem(L.CACHE, JSON.stringify(r.live)); } catch (e) { /* без хранилища работаем с тем, что пришло */ }
-    start(r.live);
-  }, () => start(cached()));
+  ["pointerdown", "keydown", "wheel"].forEach((ev) => addEventListener(ev, () => { touched = true; }, { once: true, passive: true }));
+  const late = setTimeout(() => start(cached()), copy !== null ? 4000 : 8000);
+
+  (L.pending || L.fetchLive(10000)).then((r) => {
+    clearTimeout(late);
+    store.set(r.live);
+    if (!started) {
+      try { sessionStorage.removeItem(RELOADED); } catch (e) { /* нет хранилища: не страшно */ }
+      start(r.live);
+      return;
+    }
+    if (JSON.stringify(r.live) === JSON.stringify(used) || touched) return;
+    try {
+      if (sessionStorage.getItem(RELOADED)) return;
+      sessionStorage.setItem(RELOADED, "1");
+    } catch (e) { return; }
+    location.reload();
+  }, () => { clearTimeout(late); start(cached()); });
 })();

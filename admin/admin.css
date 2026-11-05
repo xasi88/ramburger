@@ -55,6 +55,8 @@
 .ad-sw.on i { background: var(--coal); }
 .ad-sw.on i::after { transform: translateX(16px); background: var(--tile); }
 
+.ad-sec-off .ad-row { opacity: 0.5; }
+.ad-sec-note { margin: -2px 0 8px; padding: 10px 12px; border-radius: 12px; background: var(--cream); font-size: 13.5px; font-weight: 700; }
 .ad-row {
   display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px; border-radius: 18px;
   background: var(--cream); box-shadow: var(--shadow);

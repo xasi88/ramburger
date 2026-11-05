@@ -79,4 +79,9 @@
   }
 
   root.Live = { FB, CACHE, FIELDS, merge, visible, priced, fetchLive };
+
+  // В меню файл стоит в <head> с отметкой data-early: запрос к базе уходит сразу, пока грузится страница.
+  // Первый запрос к серверу Google бывает дольше 2 секунд (2026-11-05: 2,5 с, меню взяло старую копию).
+  const me = typeof document !== "undefined" && document.currentScript;
+  if (me && me.hasAttribute("data-early")) root.Live.pending = fetchLive(10000);
 })(typeof window !== "undefined" ? window : globalThis);
