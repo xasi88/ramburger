@@ -6,7 +6,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=f6684264";
+import { createUI } from "./ui.js?v=b1015635";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -34,7 +34,8 @@ async function save(change, note) {
       cur.sections = cur.sections || {};
       change(cur);
       json = JSON.stringify(cur);
-      tx.set(LIVE, { json, at: serverTimestamp(), by: user.email });
+      // Почта только в закрытой истории: menu/live читают все гости
+      tx.set(LIVE, { json, at: serverTimestamp() });
     });
     addDoc(collection(db, "history"), { json, at: serverTimestamp(), by: user.email }).catch(() => { /* копия не главное */ });
     ui.toast(note || "Сохранено. Гости увидят при следующем открытии меню.");
