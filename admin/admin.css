@@ -107,6 +107,26 @@
   background: rgba(20, 18, 16, 0.08); color: var(--coal); font: 700 14px/1 var(--body);
 }
 
+/* Настройки заказа (settings.js) */
+.ad-set-open {
+  width: 100%; min-height: 64px; padding: 12px 14px; border: 0; border-radius: 16px; background: var(--cream); color: var(--coal);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; box-shadow: var(--shadow);
+}
+.ad-set-open span { display: grid; gap: 3px; }
+.ad-set-open b { font: 800 16px/1.2 var(--body); }
+.ad-set-open small { font-size: 13px; font-weight: 600; color: var(--tobacco); }
+.ad-set-open i { flex: none; padding: 10px 12px; border-radius: 12px; background: var(--coal); color: #fff; font: 700 14px/1 var(--body); }
+.ad-set { padding: 20px 18px 22px; display: grid; gap: 16px; }
+.ad-set h2 { font: 800 22px/1.2 var(--head); padding-right: 44px; }
+.ad-set-hint { font-size: 12.5px; font-weight: 600; color: var(--tobacco); }
+.ad-opt [data-plprice] { width: 84px; flex: none; font-weight: 800; }
+.ad-secadd { margin-top: 32px; padding: 18px 16px; border-radius: 18px; background: var(--cream); box-shadow: var(--shadow); display: grid; gap: 10px; }
+.ad-secadd h2 { font: 800 20px/1.2 var(--head); }
+.ad-secadd p { font-size: 13.5px; color: var(--tobacco); }
+.ad-secadd-row { display: flex; gap: 8px; }
+.ad-secadd-row input { flex: 1; min-width: 0; }
+.ad-secadd-row .btn { min-height: 48px; padding: 0 16px; }
+
 /* Поля */
 .ad input:not([type=search]), .ad textarea, .ad select {
   width: 100%; min-height: 48px; padding: 10px 12px; border: 2px solid rgba(20, 18, 16, 0.14); border-radius: 12px;

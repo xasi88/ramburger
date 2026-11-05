@@ -4,8 +4,10 @@
 // Файлом пользуются меню (js/boot.js), админка (admin/) и тесты.
 //
 // Вид правок: { "items": { "<id>": { name, desc, price, options, photo, icon, hidden, off, hit, discount, section, added } },
-//               "sections": { "<id>": { "hidden": true } } }
-// added: блюдо создано в админке, в data/menu.js его нет.
+//               "sections": { "<id>": { hidden, title, added } },
+//               "order": { night, pickup, places: [{ name, price }], pay: ["..."] } }
+// added: блюдо или раздел создан в админке, в data/menu.js его нет. Новый раздел встаёт в конец меню.
+// order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому. price null: цену доставки скажет кафе.
 
 (function (root) {
   // Адрес проекта Firebase. Это не секрет: доступ решают правила базы (firestore.rules).
@@ -30,12 +32,40 @@
     return it;
   }
 
+  // Цена доставки: число от 0 или null (цену скажет кафе)
+  const fee = (v) => (v === null || v === undefined || v === "" || !isFinite(Number(v)) ? null : Math.max(0, Math.round(Number(v))));
+
+  // Заказ у гостя: из файла, поверх правки админки
+  function orderOf(base, p) {
+    const o = Object.assign({ night: false, pickup: true, places: [], pay: [] }, copy(base || {}));
+    p = p && typeof p === "object" ? p : {};
+    if (typeof p.night === "boolean") o.night = p.night;
+    if (typeof p.pickup === "boolean") o.pickup = p.pickup;
+    if (Array.isArray(p.places)) o.places = p.places;
+    if (Array.isArray(p.pay)) o.pay = p.pay;
+    o.places = o.places.filter((x) => x && String(x.name || "").trim()).map((x) => ({ name: String(x.name).trim(), price: fee(x.price) }));
+    o.pay = o.pay.map((x) => String(x || "").trim()).filter(Boolean);
+    return o;
+  }
+
+  // Открыто ли кафе сейчас: часы по Москве
+  function openNow(cafe, date) {
+    const h = Number(new Intl.DateTimeFormat("ru-RU", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Moscow" }).format(date || new Date()));
+    return h >= cafe.open && h < cafe.close;
+  }
+
   // Меню из файла + правки админки
   function merge(base, live) {
     const data = copy(base);
-    if (!live || typeof live !== "object") return data;
+    live = live && typeof live === "object" ? live : {};
+    data.order = orderOf(data.order, live.order);
     const items = live.items || {}, secs = live.sections || {};
     const sectionOf = (id) => data.menu.find((g) => g.id === id);
+    // Новые разделы из админки: в конец меню, до блюд, чтобы блюда нашли свой раздел
+    Object.keys(secs).forEach((id) => {
+      const s = secs[id];
+      if (s && s.added && String(s.title || "").trim() && !sectionOf(id)) data.menu.push({ id, title: String(s.title).trim(), note: "", items: [], added: true });
+    });
     Object.keys(items).forEach((id) => {
       const p = items[id];
       if (!p || typeof p !== "object") return;
@@ -78,7 +108,7 @@
     }
   }
 
-  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, fetchLive };
+  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, fetchLive, orderOf, openNow, fee };
 
   // В меню файл стоит в <head> с отметкой data-early: запрос к базе уходит сразу, пока грузится страница.
   // Первый запрос к серверу Google бывает дольше 2 секунд (2026-11-05: 2,5 с, меню взяло старую копию).

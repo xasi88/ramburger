@@ -6,7 +6,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=c03ec568";
+import { createUI } from "./ui.js?v=f175ee91";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -18,7 +18,8 @@ const TEAM = doc(db, "config", "admins");
 
 let user = null, live = null, admins = null, stop = null;
 const baseIds = new Set(BASE.menu.flatMap((g) => g.items.map((it) => it.id)));
-const basePhotos = BASE.menu.flatMap((g) => g.items.map((it) => it.photo)).filter(Boolean);
+// Фото блюд из файла меню и фото без блюда (spare): всё это видно в выборе фото
+const basePhotos = BASE.menu.flatMap((g) => g.items.map((it) => it.photo)).filter(Boolean).concat(BASE.spare || []);
 
 const draw = () => ui.render(L.merge(BASE, live), admins, user.email);
 const said = (e) => (e && e.code === "permission-denied" ? "Нет прав на правку меню" : "Не сохранилось. Проверьте интернет и попробуйте ещё раз.");
@@ -58,7 +59,15 @@ const ui = createUI({
   patch: (id, p) => save((cur) => { cur.items[id] = Object.assign(cur.items[id] || {}, p); },
     "hidden" in p ? (p.hidden ? "Блюдо скрыто от гостей" : "Блюдо снова в меню") : p.hit ? "Блюдо в «Хитах»" : "Убрано из «Хитов»"),
 
-  section: (id, hidden) => save((cur) => { cur.sections[id] = { hidden }; }, hidden ? "Раздел скрыт от гостей" : "Раздел снова в меню"),
+  // Тумблер раздела. Название и отметку нового раздела не трогаем.
+  section: (id, hidden) => save((cur) => { cur.sections[id] = Object.assign(cur.sections[id] || {}, { hidden }); }, hidden ? "Раздел скрыт от гостей" : "Раздел снова в меню"),
+
+  // Новый раздел встаёт в конец меню. Удалить можно только его и только пустой (проверка в settings.js).
+  addSection: (title) => save((cur) => { cur.sections["s" + Date.now().toString(36)] = { title, added: true }; }, "Раздел добавлен. Добавьте в него блюдо."),
+  removeSection: (id) => save((cur) => { delete cur.sections[id]; }, "Раздел удалён"),
+
+  // Заказ у гостей: ночью, с собой, сёла с ценой, оплата (вид: js/live.js)
+  setOrder: (order) => save((cur) => { cur.order = order; }, "Настройки заказа сохранены"),
 
   // Окно блюда: всё, что в нём, ложится в правку целиком
   saveItem(id, e) {

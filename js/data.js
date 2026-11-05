@@ -1,7 +1,8 @@
 // Данные для сайта: меню из data/menu.js с правками админки (js/live.js) и общие расчёты цен.
 // Гость видит только блюда с названием и ценой, не скрытые, из включённых разделов.
 // Блюда с отметкой «Хит» дополнительно стоят в разделе «Хиты» вверху меню.
-// Комбо со своей ценой из нескольких блюд (promos.combos) у кафе пока нет: корзина их понимает.
+// Комбо со своей ценой из нескольких блюд (promos.combos) у кафе нет: корзина их понимает.
+// Заказ у гостя (ночью, с собой, сёла, оплата): window.ORDER, вид в js/live.js.
 
 (function () {
   const src = window.MENU_DATA;
@@ -13,8 +14,19 @@
   const hits = shown.flatMap((g) => g.items).filter((it) => it.hit);
 
   window.CAFE = src.cafe;
+  window.ORDER = window.Live.orderOf(src.order);
   window.MENU = hits.length ? [{ id: "hits", title: "Хиты", note: "", items: hits }].concat(shown) : shown;
   window.PROMOS = promos;
+  const O = window.ORDER;
+
+  // Доставка коротко: «Доставка 150 ₽», «Доставка от 150 ₽» или просто «Доставка», если цен нет
+  function deliveryText() {
+    const known = O.places.filter((p) => p.price !== null).map((p) => p.price);
+    if (!known.length) return "Доставка";
+    const min = Math.min(...known), one = O.places.every((p) => p.price === min);
+    if (min === 0) return one ? "Бесплатная доставка" : "Доставка от 0 ₽";
+    return `Доставка ${one ? "" : "от "}${min.toLocaleString("ru-RU")} ₽`;
+  }
 
   const dish = {};
   shown.forEach((g) => g.items.forEach((it) => { dish[it.id] = it; }));
@@ -43,5 +55,9 @@
     combos: () => promos.combos.filter(comboOk),
     combo: (id) => promos.combos.find((c) => c.id === id && comboOk(c)),
     bonus: () => (live(promos.bonus) && promos.bonus.percent > 0 ? promos.bonus : null),
+    deliveryText,
+    // Заказ можно отправить: кафе открыто или ночью заказы принимают
+    openNow: (date) => window.Live.openNow(window.CAFE, date),
+    canOrder: (date) => O.night || window.Live.openNow(window.CAFE, date),
   };
 })();

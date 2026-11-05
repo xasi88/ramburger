@@ -12,16 +12,18 @@
   Order.mount($("orderPage"), false);
   Order.mount($("sideOrder"), true);
 
-  // Открыто ли кафе сейчас: часы по Москве
+  // Открыто ли кафе сейчас: часы по Москве. Ночью заказы принимают, если Ильяс включил это в админке.
   function status() {
-    const h = Number(new Intl.DateTimeFormat("ru-RU", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Moscow" }).format(new Date()));
-    const open = h >= C.open && h < C.close;
+    const open = window.Data.openNow(), night = !open && window.ORDER.night;
     const el = $("status");
-    el.innerHTML = open ? `Открыто<span class="st-more"> до ${C.close}:00</span>` : `Закрыто<span class="st-more">, откроется в ${C.open}:00</span>`;
-    el.classList.toggle("closed", !open);
+    el.innerHTML = open ? `Открыто<span class="st-more"> до ${C.close}:00</span>`
+      : night ? `Принимаем заказы<span class="st-more"> ночью</span>`
+      : `Закрыто<span class="st-more">, откроется в ${C.open}:00</span>`;
+    el.classList.toggle("closed", !open && !night);
   }
   status();
-  setInterval(status, 60000);
+  // Раз в минуту: часы в шапке и кнопка заказа (ночью заказ может закрыться)
+  setInterval(() => { status(); Order.update(); }, 60000);
 
   // Экран «Кафе»
   const row = (href, icon, title, sub, ext) => `<a class="row" href="${href}"${ext ? ' target="_blank" rel="noopener"' : ""}><i>${icon}</i><div><b>${title}</b><span>${sub}</span></div>${ico.go.replace("<svg", '<svg class="go"')}</a>`;
@@ -30,12 +32,12 @@
     <div class="cafe-hero">
       <span class="cafe-logo">${window.LOGO}</span>
       <h1>Кафе «${esc(C.name)}»</h1>
-      <p>${esc(C.tagline)}. Комбо, бургеры, шаурма, пицца и роллы.</p>
+      <p>${esc(C.tagline)}. Бургеры, шаурма, пицца и роллы.</p>
     </div>
     <div class="rows">
       ${row("tel:+" + C.phone, ico.phone, esc(C.phoneText), `${esc(C.place)} · принимает заказы с сайта`, false)}
       ${row(`https://instagram.com/${C.instagram}`, ico.ig, "@" + esc(C.instagram), "Instagram", true)}
-      <div class="row"><i>${ico.clock}</i><div><b>${esc(C.hours)}</b><span>Доставка ${cart.rub(C.delivery)}</span></div><span></span></div>
+      <div class="row"><i>${ico.clock}</i><div><b>${esc(C.hours)}</b><span>${esc(window.Data.deliveryText())}${window.ORDER.places.length ? ": " + esc(window.ORDER.places.map((p) => p.name).join(", ")) : ""}</span></div><span></span></div>
     </div>
     <div class="cafe-cta">
       <a class="btn btn-wa" href="https://wa.me/${C.phone}" target="_blank" rel="noopener">${ico.wa}Написать в WhatsApp</a>
@@ -47,7 +49,7 @@
   const norm = (s) => s.toLowerCase().replace(/ё/g, "е");
   // Раздел «Хиты» повторяет блюда из других разделов: в поиске его не считаем
   const all = M.filter((g) => g.id !== "hits").flatMap((g) => g.items.map((it) => ({ it, hay: norm(`${it.name} ${it.desc} ${g.title}`) })));
-  ["Пицца", "Шаурма", "Ролл", "Бургер", "Комбо", "Картошка"].forEach((w) => $("quick").insertAdjacentHTML("beforeend", `<button type="button">${w}</button>`));
+  ["Пицца", "Шаурма", "Ролл", "Бургер", "Крылышки", "Картошка"].forEach((w) => $("quick").insertAdjacentHTML("beforeend", `<button type="button">${w}</button>`));
   function search() {
     const q = norm($("q").value.trim());
     $("qClear").hidden = !q;

@@ -4,6 +4,8 @@
 // Фото: img/food/fNN.webp, фото от Ильяса 2026-11-05 (исходники/фото-в-меню.py). Номер NN как в папке с фото.
 // hidden: блюдо скрыто от гостей. new-fNN: новое фото без названия и цены, имя и цену даёт Ильяс в админке.
 // Правки Ильяса из админки лежат в Firebase и ложатся поверх этого файла (js/live.js).
+// order: заказ по умолчанию (ночью, с собой, сёла доставки с ценой, оплата). Ильяс меняет его в админке. price null: цену доставки скажет кафе.
+// spare: фото без блюда (бывшие комбо, у кафе их нет), их видно в выборе фото админки.
 // options: варианты блюда со своей ценой. off: нет в наличии. icon: рисунок из js/icons.js, если нет фото.
 window.MENU_DATA = {
   "cafe": {
@@ -17,26 +19,19 @@ window.MENU_DATA = {
     "phone": "79280026880",
     "phoneText": "+7 928 002-68-80",
     "instagram": "_ramburger_",
-    "delivery": 150,
     "demo": false
   },
+  "order": {
+    "night": false,
+    "pickup": true,
+    "places": [
+      { "name": "Валерик", "price": 150 },
+      { "name": "Гихи", "price": null },
+      { "name": "Катар-Юрт", "price": null }
+    ],
+    "pay": ["Наличными при получении", "Переводом при получении", "Предоплата переводом"]
+  },
   "menu": [
-    {
-      "id": "combo",
-      "title": "Комбо",
-      "note": "Обед в одной коробке. Два соуса в каждом комбо.",
-      "items": [
-        { "id": "combo1", "name": "Комбо 1", "desc": "Тортилья сырная, куриный поп-корн, картошка по-деревенски, два соуса.", "price": 430, "icon": "combo", "photo": "img/food/f72.webp" },
-        { "id": "combo2", "name": "Комбо 2", "desc": "Хот-дог, стрипсы, картошка фри, два соуса.", "price": 430, "icon": "combo", "photo": "img/food/f77.webp" },
-        { "id": "combo3", "name": "Комбо 3", "desc": "Чизбургер, наггетсы, картошка по-деревенски, два соуса.", "price": 430, "icon": "combo", "photo": "img/food/f74.webp" },
-        { "id": "combo4", "name": "Комбо 4", "desc": "Шаурма, картошка фри, куриные крылышки, два соуса.", "price": 430, "icon": "combo", "photo": "img/food/f71.webp" },
-        { "id": "new-f05", "name": "", "desc": "", "price": 0, "icon": "combo", "photo": "img/food/f05.webp", "hidden": true },
-        { "id": "new-f12", "name": "", "desc": "", "price": 0, "icon": "combo", "photo": "img/food/f12.webp", "hidden": true },
-        { "id": "new-f20", "name": "", "desc": "", "price": 0, "icon": "combo", "photo": "img/food/f20.webp", "hidden": true },
-        { "id": "new-f33", "name": "", "desc": "", "price": 0, "icon": "combo", "photo": "img/food/f33.webp", "hidden": true },
-        { "id": "new-f52", "name": "", "desc": "", "price": 0, "icon": "combo", "photo": "img/food/f52.webp", "hidden": true }
-      ]
-    },
     {
       "id": "burgers",
       "title": "Бургеры и хот-доги",
@@ -148,7 +143,12 @@ window.MENU_DATA = {
         { "id": "new-f87", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f87.webp", "hidden": true },
         { "id": "new-f88", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f88.webp", "hidden": true },
         { "id": "new-f89", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f89.webp", "hidden": true },
-        { "id": "new-f90", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f90.webp", "hidden": true }
+        { "id": "new-f90", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f90.webp", "hidden": true },
+        { "id": "new-f05", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f05.webp", "hidden": true },
+        { "id": "new-f12", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f12.webp", "hidden": true },
+        { "id": "new-f20", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f20.webp", "hidden": true },
+        { "id": "new-f33", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f33.webp", "hidden": true },
+        { "id": "new-f52", "name": "", "desc": "", "price": 0, "icon": "snack", "photo": "img/food/f52.webp", "hidden": true }
       ]
     },
     {
@@ -184,5 +184,6 @@ window.MENU_DATA = {
         { "id": "poke", "name": "Салат Поке", "desc": "Огурец, помидор, креветки, лосось, икра, сыр, авокадо, соус.", "price": 400, "icon": "salad", "photo": "img/food/f39.webp" }
       ]
     }
-  ]
+  ],
+  "spare": ["img/food/f71.webp", "img/food/f72.webp", "img/food/f74.webp", "img/food/f77.webp"]
 };

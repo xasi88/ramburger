@@ -1,5 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
-// Данные и запись в базу: admin.js. Здесь только вид и нажатия.
+// Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
+
+import { createSettings } from "./settings.js?v=f175ee91";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -40,13 +42,15 @@ export function createUI(act) {
     toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
   }
 
+  const settings = createSettings({ openSheet, closeSheet, toast, esc, num, act, get: () => st.menu });
+
   // Вход и отказ
   function login(onSignIn) {
     $("adOut").hidden = true; $("adAdd").hidden = true;
     $("adMain").innerHTML = `<section class="ad-login">
       <span class="ad-login-mark">${window.LOGO}</span>
       <h1>Админка меню</h1>
-      <p>Здесь кафе меняет названия, цены и фото блюд, включает и выключает блюда, комбо и скидки. Гости видят правки сразу.</p>
+      <p>Здесь кафе меняет названия, цены и фото блюд, включает и выключает блюда и разделы, ставит скидки и настраивает заказ. Гости видят правки сразу.</p>
       <button class="btn btn-main btn-wide" type="button" id="adSignIn">Войти через Google</button>
     </section>`;
     $("adSignIn").onclick = onSignIn;
@@ -104,8 +108,10 @@ export function createUI(act) {
         <header class="ad-sec-head">
           <h2>${esc(g.title)} <span>${shown ? `${g.items.filter(L.visible).length} из ${g.items.length}` : "скрыт"}</span></h2>
           <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
+          ${g.added ? `<button type="button" class="ad-mini" data-delsec="${esc(g.id)}">Удалить раздел</button>` : ""}
         </header>
         ${shown ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
+        ${shown && !g.items.length ? `<p class="ad-sec-note">Раздел пустой, гости его пока не видят. Нажмите «+ Блюдо» и выберите этот раздел.</p>` : ""}
         ${items.map(row).join("")}
       </section>`;
     }).join("");
@@ -136,10 +142,12 @@ export function createUI(act) {
         <div class="ad-top">
           <p class="ad-hello">Вы вошли: ${esc(email)}. Правки сохраняются сразу, гости видят их при следующем открытии меню.</p>
           <p class="ad-note" id="adFresh"></p>
+          <div id="adSet"></div>
           <div class="ad-tabs" id="adTabs" role="tablist"></div>
           <label class="ad-search">${svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>')}<input type="search" id="adQ" placeholder="Найти блюдо" autocomplete="off" aria-label="Найти блюдо"></label>
         </div>
         <div id="adList"></div>
+        ${settings.sectionForm()}
         <div id="adTeam"></div>`;
       $("adQ").addEventListener("input", (e) => { st.q = e.target.value.trim(); list(); });
     }
@@ -149,6 +157,7 @@ export function createUI(act) {
       const n = all().filter(({ it }) => f(it)).length;
       return `<button type="button" role="tab" aria-selected="${st.filter === id}" data-filter="${id}">${name} <span>${n}</span></button>`;
     }).join("");
+    $("adSet").innerHTML = settings.card(menu.order);
     $("adTeam").innerHTML = team();
     list();
   }

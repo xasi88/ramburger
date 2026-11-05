@@ -45,7 +45,7 @@ window.MenuView = (function () {
         <li><i>${ico.bag}</i><span>Откройте корзину</span></li>
         <li><i class="wa">${ico.wa}</i><span>Отправьте в WhatsApp</span></li>
       </ol>
-      <p class="terms"><span>${ico.truck}Доставка ${cart.rub(C.delivery)}</span><span>${ico.walk}С собой</span><span>${ico.clock}${C.open}:00 - ${C.close}:00</span></p>`;
+      <p class="terms"><span>${ico.truck}${esc(window.Data.deliveryText())}</span>${window.ORDER.pickup ? `<span>${ico.walk}С собой</span>` : ""}<span>${ico.clock}${C.open}:00 - ${C.close}:00</span></p>`;
 
     $("groups").innerHTML = M.filter((g) => g.items.length).map(section).join("");
     $("chipsTrack").insertAdjacentHTML("beforeend", sections.map((s) => `<button class="chip" type="button" data-cat="${s.id}">${esc(s.title)}</button>`).join(""));
