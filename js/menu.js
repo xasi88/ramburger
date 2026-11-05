@@ -11,9 +11,13 @@ window.MenuView = (function () {
     // Наклейка на фото: «3 / 6 / 9 шт» или «2 размера»
     const o = it.options || [];
     const pcs = o.length && o.every((x) => / шт$/.test(x.name));
-    const sizes = o.length ? `<span class="badge">${pcs ? o.map((x) => x.name.replace(" шт", "")).join(" / ") + " шт" : `${o.length} размера`}</span>` : "";
+    const sizes = o.length ? `<span class="badge">${pcs ? o.map((x) => x.name.replace(" шт", "")).join(" / ") + " шт" : `${o.length} ${o.length === 1 ? "размер" : o.length < 5 ? "размера" : "размеров"}`}</span>` : "";
+    // Отметки админки: «Хит» и скидка
+    const marks = it.hit || it.discount > 0
+      ? `<span class="marks">${it.hit ? `<i class="mk-hit">Хит</i>` : ""}${it.discount > 0 ? `<i class="mk-sale">−${it.discount}%</i>` : ""}</span>`
+      : "";
     return `<article class="card${it.off ? " off" : ""}" data-open="${it.id}" data-g="${groupOf[it.id].id}" tabindex="0" aria-label="${esc(it.name)}">
-      <div class="art">${art(it)}${sizes}<span class="tag">${price(it)}</span></div>
+      <div class="art">${art(it)}${sizes}${marks}<span class="tag">${price(it)}</span></div>
       <div class="c-body">
         <h3 class="c-name">${esc(it.name)}</h3>
         ${it.desc ? `<p class="c-desc">${esc(it.desc)}</p>` : ""}

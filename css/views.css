@@ -85,6 +85,7 @@
 .row span { font-size: 13px; color: var(--tobacco); }
 .row .go { width: 20px; height: 20px; color: var(--tobacco); }
 .cafe-cta { display: grid; gap: 10px; margin-top: 16px; }
+.cafe-admin { display: block; margin-top: 18px; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 600; color: var(--tobacco); }
 
 /* Большой экран: заказ стоит справа от меню, кнопка корзины в меню не нужна */
 @media (min-width: 1024px) {

@@ -1,0 +1,320 @@
+// Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
+// Данные и запись в базу: admin.js. Здесь только вид и нажатия.
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const rub = (n) => Number(n).toLocaleString("ru-RU") + " ₽";
+const num = (v) => Math.max(0, Math.round(Number(String(v).replace(/[^\d]/g, "")) || 0));
+const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+const EYE = svg('<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>');
+const EYE_OFF = svg('<path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3 3.6M6.6 6.6C3.9 8.3 2 12 2 12s3.6 6 10 6a9.7 9.7 0 0 0 4.4-1"/>');
+const PIC = (p) => "../" + p;
+
+export function createUI(act) {
+  const L = window.Live;
+  const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null };
+
+  // Окно снизу: правка блюда или выбор фото
+  function openSheet(html) {
+    $("adSheetBody").innerHTML = html;
+    const s = $("adSheet");
+    s.classList.add("open");
+    s.setAttribute("aria-hidden", "false");
+    document.documentElement.style.overflow = "hidden";
+    s.querySelector(".sheet-card").scrollTop = 0;
+  }
+  function closeSheet() {
+    const s = $("adSheet");
+    s.classList.remove("open");
+    s.setAttribute("aria-hidden", "true");
+    document.documentElement.style.overflow = "";
+    st.ed = null; st.edId = null;
+  }
+
+  let toastTimer;
+  function toast(text) {
+    const t = $("toast");
+    t.textContent = text;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+  }
+
+  // Вход и отказ
+  function login(onSignIn) {
+    $("adOut").hidden = true; $("adAdd").hidden = true;
+    $("adMain").innerHTML = `<section class="ad-login">
+      <span class="ad-login-mark">${window.LOGO}</span>
+      <h1>Админка меню</h1>
+      <p>Здесь кафе меняет названия, цены и фото блюд, включает и выключает блюда, комбо и скидки. Гости видят правки сразу.</p>
+      <button class="btn btn-main btn-wide" type="button" id="adSignIn">Войти через Google</button>
+    </section>`;
+    $("adSignIn").onclick = onSignIn;
+  }
+  function denied(email) {
+    $("adOut").hidden = false; $("adAdd").hidden = true;
+    $("adMain").innerHTML = `<section class="ad-login">
+      <h1>Нет доступа</h1>
+      <p>Почты <b>${esc(email)}</b> нет в списке админов. Попросите автора меню добавить её и войдите снова.</p>
+      <button class="btn btn-soft btn-wide" type="button" data-signout>Войти другой почтой</button>
+    </section>`;
+  }
+
+  // Что видно в списке
+  const all = () => st.menu.menu.flatMap((g) => g.items.map((it) => ({ it, g })));
+  const needs = (it) => !String(it.name || "").trim() || !L.priced(it);
+  const FILTERS = [
+    ["all", "Все", () => true],
+    ["new", "Новые фото", (it) => needs(it)],
+    ["hidden", "Скрыто", (it) => !L.visible(it)],
+    ["hits", "Хиты", (it) => it.hit],
+    ["sale", "Скидки", (it) => it.discount > 0],
+  ];
+
+  function priceText(it) {
+    if (it.options && it.options.length) return it.options.map((o) => `${esc(o.name)} ${rub(o.price)}`).join(" · ");
+    return it.price > 0 ? rub(it.price) : "нет цены";
+  }
+  const thumb = (it) => (it.photo ? `<img src="${PIC(it.photo)}" alt="" loading="lazy" decoding="async">` : window.ICONS[it.icon] || window.ICONS.plate);
+
+  function row(it) {
+    const vis = L.visible(it);
+    return `<article class="ad-row${vis ? "" : " ad-dim"}">
+      <button class="ad-open" type="button" data-edit="${esc(it.id)}">
+        <span class="ad-thumb">${thumb(it)}</span>
+        <span class="ad-info">
+          <b class="${it.name ? "" : "ad-noname"}">${esc(it.name) || "Без названия"}</b>
+          <small>${priceText(it)}${it.discount > 0 ? ` <em class="ad-mk">−${it.discount}%</em>` : ""}${it.off ? ` <em class="ad-mk">нет в наличии</em>` : ""}</small>
+        </span>
+      </button>
+      <button class="ad-tg${it.hidden ? "" : " on"}" type="button" data-toggle="show" data-id="${esc(it.id)}" aria-pressed="${!it.hidden}" aria-label="Показывать в меню">${it.hidden ? EYE_OFF : EYE}<span>${it.hidden ? "Скрыто" : "В меню"}</span></button>
+      <button class="ad-tg ad-hit${it.hit ? " on" : ""}" type="button" data-toggle="hit" data-id="${esc(it.id)}" aria-pressed="${!!it.hit}" aria-label="Хит"><i>Хит</i><span>${it.hit ? "Да" : "Нет"}</span></button>
+    </article>`;
+  }
+
+  function list() {
+    const f = FILTERS.find((x) => x[0] === st.filter)[2];
+    const q = st.q.toLowerCase().replace(/ё/g, "е");
+    const hit = (it, g) => !q || `${it.name} ${it.desc} ${g.title}`.toLowerCase().replace(/ё/g, "е").includes(q);
+    const html = st.menu.menu.map((g) => {
+      const items = g.items.filter((it) => f(it) && hit(it, g));
+      if (!items.length && (st.filter !== "all" || q)) return "";
+      const shown = !g.hidden;
+      return `<section class="ad-sec">
+        <header class="ad-sec-head">
+          <h2>${esc(g.title)} <span>${g.items.filter(L.visible).length} из ${g.items.length}</span></h2>
+          <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
+        </header>
+        ${items.map(row).join("")}
+      </section>`;
+    }).join("");
+    $("adList").innerHTML = html || `<p class="ad-empty">Ничего не нашлось.</p>`;
+  }
+
+  function team() {
+    if (!st.admins) return "";
+    return `<section class="ad-team">
+      <h2>Кто может править меню</h2>
+      <p>Вход через Google. Автор меню входит всегда. Список меняет только автор.</p>
+      <ul>${st.admins.map((e) => `<li><span>${esc(e)}</span><button type="button" class="ad-mini" data-unadmin="${esc(e)}">Убрать</button></li>`).join("") || "<li><span>Пока никого</span></li>"}</ul>
+      <form class="ad-team-add" id="adTeamForm">
+        <input type="email" id="adTeamEmail" placeholder="Почта Google" autocomplete="off" required aria-label="Почта нового админа">
+        <button class="btn btn-main" type="submit">Добавить</button>
+      </form>
+    </section>`;
+  }
+
+  // Главный экран: первый раз целиком, потом только список
+  function render(menu, admins, email) {
+    const first = !st.menu;
+    st.menu = menu; st.admins = admins; st.email = email;
+    $("adOut").hidden = false; $("adAdd").hidden = false;
+    const fresh = all().filter(({ it }) => needs(it)).length;
+    if (first || !$("adList")) {
+      $("adMain").innerHTML = `
+        <div class="ad-top">
+          <p class="ad-hello">Вы вошли: ${esc(email)}. Правки сохраняются сразу, гости видят их при следующем открытии меню.</p>
+          <p class="ad-note" id="adFresh"></p>
+          <div class="ad-tabs" id="adTabs" role="tablist"></div>
+          <label class="ad-search">${svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>')}<input type="search" id="adQ" placeholder="Найти блюдо" autocomplete="off" aria-label="Найти блюдо"></label>
+        </div>
+        <div id="adList"></div>
+        <div id="adTeam"></div>`;
+      $("adQ").addEventListener("input", (e) => { st.q = e.target.value.trim(); list(); });
+    }
+    $("adFresh").hidden = !fresh;
+    $("adFresh").innerHTML = `Новых фото без названия или цены: <b>${fresh}</b>. Откройте фото, впишите название и цену, включите «В меню».`;
+    $("adTabs").innerHTML = FILTERS.map(([id, name, f]) => {
+      const n = all().filter(({ it }) => f(it)).length;
+      return `<button type="button" role="tab" aria-selected="${st.filter === id}" data-filter="${id}">${name} <span>${n}</span></button>`;
+    }).join("");
+    $("adTeam").innerHTML = team();
+    list();
+  }
+
+  // Окно правки блюда
+  const sections = () => st.menu.menu.map((g) => ({ id: g.id, title: g.title }));
+  function editor(id) {
+    const found = all().find(({ it }) => it.id === id);
+    const it = found ? found.it : { id: null, name: "", desc: "", price: 0, icon: "plate", hidden: false };
+    st.edId = id;
+    st.ed = JSON.parse(JSON.stringify({
+      name: it.name || "", desc: it.desc || "", price: it.price || 0, options: it.options || null, photo: it.photo || "",
+      icon: it.icon || "plate", hidden: !!it.hidden, off: !!it.off, hit: !!it.hit, discount: it.discount || 0,
+      section: found ? found.g.id : st.menu.menu[0].id,
+    }));
+    st.ed.added = !found || !!act.isAdded(id);
+    drawEditor();
+  }
+
+  function prices() {
+    const e = st.ed;
+    if (!e.options) {
+      return `<div class="ad-price"><input id="edPrice" inputmode="numeric" pattern="[0-9]*" value="${e.price || ""}" placeholder="0" aria-label="Цена в рублях"><span>₽</span></div>
+        <button type="button" class="ad-link" data-sizes="on">Добавить размеры (маленькая, большая, 6 шт)</button>`;
+    }
+    return e.options.map((o, i) => `<div class="ad-opt">
+        <input data-optn="${i}" value="${esc(o.name)}" placeholder="Размер" maxlength="24" aria-label="Название размера">
+        <input data-optp="${i}" inputmode="numeric" pattern="[0-9]*" value="${o.price || ""}" placeholder="0" aria-label="Цена размера"><span>₽</span>
+        <button type="button" class="ad-mini" data-delopt="${i}" aria-label="Убрать размер">×</button>
+      </div>`).join("") + `<button type="button" class="ad-link" data-addopt>Ещё размер</button> <button type="button" class="ad-link" data-sizes="off">Одна цена без размеров</button>`;
+  }
+
+  function sw(key, label, note) {
+    const on = key === "show" ? !st.ed.hidden : !!st.ed[key];
+    return `<button type="button" class="ad-sw ad-sw-row${on ? " on" : ""}" role="switch" aria-checked="${on}" data-edsw="${key}"><i></i><span><b>${label}</b><small>${note}</small></span></button>`;
+  }
+
+  function drawEditor() {
+    const e = st.ed;
+    openSheet(`<div class="ad-ed">
+      <div class="ad-ed-photo">${e.photo ? `<img src="${PIC(e.photo).replace(/\.webp$/, "-big.webp")}" alt="">` : window.ICONS[e.icon] || window.ICONS.plate}
+        <button type="button" class="ad-ed-pick" data-gallery>Сменить фото</button></div>
+      <div class="ad-ed-body">
+        <h2 id="adSheetTitle">${st.edId ? "Блюдо" : "Новое блюдо"}</h2>
+        <label class="ad-f"><span>Название</span><input id="edName" maxlength="60" value="${esc(e.name)}" placeholder="Например, Чизбургер"></label>
+        <label class="ad-f"><span>Состав</span><textarea id="edDesc" maxlength="200" rows="2" placeholder="Можно оставить пустым">${esc(e.desc)}</textarea></label>
+        <label class="ad-f"><span>Раздел</span><select id="edSec">${sections().map((s) => `<option value="${esc(s.id)}"${s.id === e.section ? " selected" : ""}>${esc(s.title)}</option>`).join("")}</select></label>
+        <div class="ad-f"><span>Цена</span><div id="edPrices">${prices()}</div></div>
+        <div class="ad-f"><span>Скидка</span><div class="ad-chips">${[0, 10, 15, 20, 30].map((d) => `<button type="button" data-disc="${d}" aria-pressed="${e.discount === d}">${d ? "−" + d + "%" : "Нет"}</button>`).join("")}</div></div>
+        <div class="ad-sws">
+          ${sw("show", "Показывать в меню", "Выключите, и гости не увидят блюдо")}
+          ${sw("hit", "Хит", "Блюдо встанет в раздел «Хиты» вверху меню")}
+          ${sw("off", "Нет в наличии", "Блюдо видно серым, заказать нельзя")}
+        </div>
+        <p class="ad-warn" id="edWarn" hidden></p>
+        <div class="ad-ed-actions">
+          <button type="button" class="btn btn-main btn-wide" data-save>Сохранить</button>
+          <button type="button" class="btn btn-soft btn-wide" data-close>Отмена</button>
+          ${e.added && st.edId ? `<button type="button" class="ad-del" data-remove>Удалить блюдо</button>` : ""}
+        </div>
+      </div>
+    </div>`);
+    warn();
+  }
+
+  // Поля окна в st.ed
+  function readForm() {
+    const e = st.ed;
+    if (!$("edName")) return e;
+    e.name = $("edName").value.replace(/\s+/g, " ").trim();
+    e.desc = $("edDesc").value.replace(/\s+/g, " ").trim();
+    e.section = $("edSec").value;
+    if (e.options) {
+      e.options = e.options.map((o, i) => ({ name: document.querySelector(`[data-optn="${i}"]`).value.trim(), price: num(document.querySelector(`[data-optp="${i}"]`).value) }));
+      e.price = e.options.length ? Math.min(...e.options.map((o) => o.price)) : 0;
+    } else {
+      e.price = num($("edPrice").value);
+    }
+    return e;
+  }
+  function warn() {
+    const e = readForm(), w = $("edWarn");
+    const miss = [!e.name && "название", !L.priced(e) && "цену"].filter(Boolean);
+    w.hidden = !(miss.length && !e.hidden);
+    w.textContent = `Гость не увидит блюдо, пока нет: ${miss.join(" и ")}.`;
+  }
+
+  function gallery() {
+    readForm();
+    const used = {};
+    all().forEach(({ it }) => { if (it.photo) (used[it.photo] = used[it.photo] || []).push(it.name || "без названия"); });
+    const photos = Object.keys(used).concat(act.photos()).filter((p, i, a) => a.indexOf(p) === i).sort();
+    openSheet(`<div class="ad-gal-wrap">
+      <h2 id="adSheetTitle">Фото блюда</h2>
+      <p>Нажмите на фото. Под фото написано, у какого блюда оно сейчас.</p>
+      <div class="ad-gal">
+        <button type="button" data-pick="" class="ad-nopic${st.ed.photo ? "" : " on"}"><span>Без фото</span></button>
+        ${photos.map((p) => `<button type="button" data-pick="${esc(p)}" class="${p === st.ed.photo ? "on" : ""}"><img src="${PIC(p)}" alt="" loading="lazy" decoding="async"><small>${esc((used[p] || ["свободно"]).join(", "))}</small></button>`).join("")}
+      </div>
+      <button type="button" class="btn btn-soft btn-wide" data-back>Назад к блюду</button>
+    </div>`);
+  }
+
+  // Нажатия
+  document.addEventListener("click", async (ev) => {
+    const t = ev.target.closest("button, [data-close]");
+    if (!t) return;
+    const d = t.dataset;
+    if (d.signout !== undefined) return act.signOut();
+    if (t.id === "adOut") return act.signOut();
+    if (t.id === "adAdd") return editor(null);
+    if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email); return; }
+    if (d.edit) return editor(d.edit);
+    if (d.toggle) {
+      const it = all().find((x) => x.it.id === d.id).it;
+      if (d.toggle === "show" && it.hidden && (!it.name || !L.priced(it))) { toast("Сначала впишите название и цену"); return editor(it.id); }
+      return act.patch(it.id, d.toggle === "show" ? { hidden: !it.hidden } : { hit: !it.hit });
+    }
+    if (d.sec) { const g = st.menu.menu.find((x) => x.id === d.sec); return act.section(g.id, !g.hidden); }
+    if (d.unadmin) return act.team(st.admins.filter((e) => e !== d.unadmin));
+    if (!st.ed) { if (d.close !== undefined) closeSheet(); return; }
+    // Дальше кнопки окна блюда
+    if (d.close !== undefined) return closeSheet();
+    if (d.gallery !== undefined) return gallery();
+    if (d.back !== undefined) return drawEditor();
+    if (d.pick !== undefined) { st.ed.photo = d.pick; return drawEditor(); }
+    if (d.sizes) {
+      readForm();
+      st.ed.options = d.sizes === "on" ? [{ name: "Маленькая", price: st.ed.price }, { name: "Большая", price: 0 }] : null;
+      if (!st.ed.options) st.ed.price = st.ed.price || 0;
+      return drawEditor();
+    }
+    if (d.addopt !== undefined) { readForm(); st.ed.options.push({ name: "", price: 0 }); return drawEditor(); }
+    if (d.delopt) { readForm(); st.ed.options.splice(Number(d.delopt), 1); if (!st.ed.options.length) st.ed.options = null; return drawEditor(); }
+    if (d.disc) { readForm(); st.ed.discount = Number(d.disc); document.querySelectorAll("[data-disc]").forEach((b) => b.setAttribute("aria-pressed", b === t)); return; }
+    if (d.edsw) {
+      const k = d.edsw;
+      if (k === "show") st.ed.hidden = !st.ed.hidden; else st.ed[k] = !st.ed[k];
+      const on = k === "show" ? !st.ed.hidden : st.ed[k];
+      t.classList.toggle("on", on); t.setAttribute("aria-checked", on);
+      return warn();
+    }
+    if (d.save !== undefined) {
+      const e = readForm();
+      if (e.options && e.options.some((o) => !o.name)) { toast("Впишите название каждого размера"); return; }
+      t.disabled = true;
+      const ok = await act.saveItem(st.edId, e);
+      t.disabled = false;
+      if (ok) closeSheet();
+      return;
+    }
+    if (d.remove !== undefined) {
+      if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Точно удалить? Нажмите ещё раз"; return; }
+      if (await act.remove(st.edId)) closeSheet();
+    }
+  });
+  document.addEventListener("input", (ev) => { if (st.ed && ev.target.closest(".ad-ed")) warn(); });
+  document.addEventListener("submit", (ev) => {
+    if (ev.target.id !== "adTeamForm") return;
+    ev.preventDefault();
+    const e = $("adTeamEmail").value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return toast("Похоже, в почте ошибка");
+    if (st.admins.includes(e)) return toast("Эта почта уже в списке");
+    act.team(st.admins.concat(e));
+  });
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && $("adSheet").classList.contains("open")) closeSheet(); });
+
+  $("adMark").innerHTML = window.LOGO;
+  return { login, denied, render, toast, closeSheet };
+}

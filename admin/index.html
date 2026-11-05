@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Админка · Рамбургер</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#EFB017">
+  <link rel="icon" href="../img/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/base.css?v=f6684264">
+  <link rel="stylesheet" href="admin.css?v=f6684264">
+</head>
+<body class="ad">
+  <header class="appbar">
+    <div class="appbar-in">
+      <a class="brand" href="../" aria-label="Открыть меню для гостей">
+        <span class="brand-mark" id="adMark"></span>
+        <span class="brand-text"><b>Ramburger</b><span class="ad-sub">Админка меню</span></span>
+      </a>
+      <button class="ad-out" id="adOut" type="button" hidden>Выйти</button>
+    </div>
+  </header>
+
+  <main class="ad-main" id="adMain" aria-live="polite">
+    <p class="ad-wait">Загружаю…</p>
+  </main>
+
+  <button class="ad-add" id="adAdd" type="button" hidden>
+    <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Блюдо
+  </button>
+
+  <div class="sheet" id="adSheet" aria-hidden="true">
+    <div class="sheet-bg" data-close></div>
+    <section class="sheet-card ad-card" role="dialog" aria-modal="true" aria-labelledby="adSheetTitle" tabindex="-1">
+      <button class="sheet-x" type="button" data-close aria-label="Закрыть">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+      <div id="adSheetBody"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../data/menu.js?v=f6684264"></script>
+  <script src="../js/live.js?v=f6684264"></script>
+  <script src="../js/icons.js?v=f6684264"></script>
+  <script type="module" src="admin.js?v=f6684264"></script>
+</body>
+</html>

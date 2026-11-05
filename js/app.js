@@ -40,11 +40,13 @@
     <div class="cafe-cta">
       <a class="btn btn-wa" href="https://wa.me/${C.phone}" target="_blank" rel="noopener">${ico.wa}Написать в WhatsApp</a>
       <button class="btn btn-soft" type="button" data-install>${ico.install}Установить на телефон</button>
-    </div>`;
+    </div>
+    <a class="cafe-admin" href="admin/">Вход для кафе: цены и блюда</a>`;
 
   // Поиск: без учёта регистра и буквы «ё»
   const norm = (s) => s.toLowerCase().replace(/ё/g, "е");
-  const all = M.flatMap((g) => g.items.map((it) => ({ it, hay: norm(`${it.name} ${it.desc} ${g.title}`) })));
+  // Раздел «Хиты» повторяет блюда из других разделов: в поиске его не считаем
+  const all = M.filter((g) => g.id !== "hits").flatMap((g) => g.items.map((it) => ({ it, hay: norm(`${it.name} ${it.desc} ${g.title}`) })));
   ["Пицца", "Шаурма", "Ролл", "Бургер", "Комбо", "Картошка"].forEach((w) => $("quick").insertAdjacentHTML("beforeend", `<button type="button">${w}</button>`));
   function search() {
     const q = norm($("q").value.trim());

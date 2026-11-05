@@ -1,15 +1,23 @@
-// Данные для сайта: меню из data/menu.js и общие расчёты цен.
-// Акций и комбо со своей ценой у кафе пока нет: поля оставлены пустыми, корзина их понимает.
+// Данные для сайта: меню из data/menu.js с правками админки (js/live.js) и общие расчёты цен.
+// Гость видит только блюда с названием и ценой, не скрытые, из включённых разделов.
+// Блюда с отметкой «Хит» дополнительно стоят в разделе «Хиты» вверху меню.
+// Комбо со своей ценой из нескольких блюд (promos.combos) у кафе пока нет: корзина их понимает.
 
 (function () {
   const src = window.MENU_DATA;
   const promos = Object.assign({ banners: [], combos: [], bonus: { active: false, min: 0, percent: 0 } }, src.promos || {});
+  const shown = src.menu
+    .filter((g) => !g.hidden)
+    .map((g) => Object.assign({}, g, { items: g.items.filter(window.Live.visible) }))
+    .filter((g) => g.items.length);
+  const hits = shown.flatMap((g) => g.items).filter((it) => it.hit);
+
   window.CAFE = src.cafe;
-  window.MENU = src.menu;
+  window.MENU = hits.length ? [{ id: "hits", title: "Хиты", note: "", items: hits }].concat(shown) : shown;
   window.PROMOS = promos;
 
   const dish = {};
-  src.menu.forEach((g) => g.items.forEach((it) => { dish[it.id] = it; }));
+  shown.forEach((g) => g.items.forEach((it) => { dish[it.id] = it; }));
 
   // Цена со скидкой блюда. Рубли без копеек.
   const cut = (price, discount) => (discount > 0 ? Math.round((price * (100 - discount)) / 100) : price);
