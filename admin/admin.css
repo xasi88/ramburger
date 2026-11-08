@@ -5,6 +5,8 @@
   min-height: 44px; padding: 0 14px; border: 0; border-radius: 12px; background: var(--cream); color: var(--coal);
   font: 700 14px/1 var(--body); box-shadow: inset 0 0 0 2px var(--coal);
 }
+/* В Telegram (мини-приложение, admin/tg.js) выйти нельзя: вход по Telegram, другой почты нет */
+.ad-telegram .ad-out { display: none; }
 .ad-main { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(112px + var(--safe-b)); }
 .ad-wait, .ad-empty { padding: 48px 0; text-align: center; font-weight: 700; color: var(--tobacco); }
 

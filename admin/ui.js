@@ -1,7 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=0c378725";
+import { createSettings } from "./settings.js?v=ade89d4d";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -264,6 +264,8 @@ export function createUI(act) {
     openSheet(`<div class="ad-gal-wrap">
       <h2 id="adSheetTitle">Фото блюда</h2>
       <p>Нажмите на фото. Под фото написано, у какого блюда оно сейчас.</p>
+      ${act.newPhoto && st.edId ? `<button type="button" class="btn btn-main btn-wide" data-newphoto>Новое фото: прислать в чат</button>
+      <p>Приложение закроется, бот попросит фото. Несохранённые правки пропадут.</p>` : ""}
       <div class="ad-gal">
         <button type="button" data-pick="" class="ad-nopic${st.ed.photo ? "" : " on"}"><span>Без фото</span></button>
         ${photos.map((p) => `<button type="button" data-pick="${esc(p)}" class="${p === st.ed.photo ? "on" : ""}"><img src="${PIC(p)}" alt="" loading="lazy" decoding="async"><small>${esc((used[p] || ["свободно"]).join(", "))}</small></button>`).join("")}
@@ -278,6 +280,7 @@ export function createUI(act) {
     if (!t) return;
     const d = t.dataset;
     if (d.signout !== undefined) return act.signOut();
+    if (d.newphoto !== undefined) return act.newPhoto(st.edId);
     if (t.id === "adOut") return act.signOut();
     if (t.id === "adAdd") return editor(null);
     if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email); return; }
