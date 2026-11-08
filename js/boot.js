@@ -5,7 +5,8 @@
 
 (function () {
   const L = window.Live;
-  const APP = ["js/data.js", "js/icons.js", "js/cart.js", "js/ui.js", "js/stats.js", "js/menu.js", "js/order.js", "js/app.js", "js/install.js"];
+  // js/version.js раньше js/app.js: экран «О кафе» показывает номер версии
+  const APP = ["js/data.js", "js/icons.js", "js/cart.js", "js/ui.js", "js/stats.js", "js/menu.js", "js/order.js", "js/version.js", "js/app.js", "js/install.js"];
   // Номер версии из адреса boot.js (его ставит выложить-сайт.py): все файлы меню из одной выкладки
   const me = document.currentScript && document.currentScript.src;
   const ver = me && me.includes("?v=") ? "?v=" + me.split("?v=")[1] : "";

@@ -43,7 +43,8 @@
       <a class="btn btn-wa" href="https://wa.me/${C.phone}" target="_blank" rel="noopener">${ico.wa}Написать в WhatsApp</a>
       <button class="btn btn-soft" type="button" data-install>${ico.install}Установить на телефон</button>
     </div>
-    <a class="cafe-admin" href="admin/">Вход для кафе: цены и блюда</a>`;
+    <a class="cafe-admin" href="admin/">Вход для кафе: цены и блюда</a>
+    ${window.Versii ? `<p class="cafe-ver">Версия ${esc(window.Versii.nomer)}</p>` : ""}`;
 
   // Поиск: без учёта регистра и буквы «ё»
   const norm = (s) => s.toLowerCase().replace(/ё/g, "е");

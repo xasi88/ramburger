@@ -187,3 +187,30 @@
 .ad-nopic span { background: var(--tile); font-weight: 800; font-size: 13px; }
 .ad-gal small { font-size: 11px; font-weight: 600; line-height: 1.25; color: var(--tobacco); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ad-gal .on img, .ad-gal .on span { outline: 3px solid var(--coal); outline-offset: 2px; }
+/* «Версии» (versii.js): строка внизу админки и окно со списком версий */
+.ad-ver {
+  width: 100%; min-height: 52px; margin-top: 24px; padding: 0 16px; border: 0; border-radius: 14px;
+  background: rgba(20, 18, 16, 0.06); color: var(--tobacco); display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font: 600 13.5px/1.2 var(--body); font-variant-numeric: tabular-nums; text-align: left;
+}
+.ad-ver b { color: var(--coal); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+.ad-vers { padding: 20px 18px 22px; display: grid; gap: 14px; }
+.ad-vers h2 { font: 800 22px/1.2 var(--head); padding-right: 44px; }
+.ad-vers-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ad-vers-list details { border-radius: 14px; background: rgba(20, 18, 16, 0.05); }
+.ad-vers-list details[open] { background: #fff; box-shadow: var(--shadow); }
+.ad-vers-list summary {
+  min-height: 56px; padding: 10px 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; list-style: none;
+}
+.ad-vers-list summary::-webkit-details-marker { display: none; }
+.ad-vers-list summary > svg { flex: none; width: 20px; height: 20px; color: var(--tobacco); transition: transform 0.25s var(--ease); }
+.ad-vers-list details[open] summary > svg { transform: rotate(180deg); }
+.ad-vers-num {
+  flex: none; min-width: 56px; padding: 7px 8px; border-radius: 10px; background: var(--coal); color: var(--tile);
+  font: 800 13px/1 var(--body); font-variant-numeric: tabular-nums; text-align: center;
+}
+.ad-vers-head { flex: 1; display: grid; gap: 3px; min-width: 0; }
+.ad-vers-head b { font: 800 15px/1.25 var(--body); }
+.ad-vers-head small { font-size: 12.5px; font-weight: 600; color: var(--tobacco); }
+.ad-vers-now { flex: none; padding: 5px 8px; border-radius: 8px; background: var(--tile); font: 800 11px/1 var(--body); font-style: normal; }
+.ad-vers-list ul { margin: 0; padding: 0 14px 14px 32px; display: grid; gap: 8px; font-size: 14px; line-height: 1.4; }

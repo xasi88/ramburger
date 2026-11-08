@@ -1,7 +1,8 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=9ec25e9b";
+import { createSettings } from "./settings.js?v=f8217dbc";
+import { versiiStroka, versiiOkno } from "./versii.js?v=f8217dbc";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -55,7 +56,7 @@ export function createUI(act) {
     $("adMain").innerHTML = `<section class="ad-login">
       <span class="ad-login-mark">${window.LOGO}</span>
       <h1>Админка меню</h1>
-      <p>Здесь кафе меняет названия, цены и фото блюд, включает и выключает блюда и разделы, ставит скидки и настраивает заказ. Гости видят правки сразу.</p>
+      <p>Здесь кафе меняет названия, цены и фото блюд, включает и выключает блюда и разделы, ставит скидки и настраивает заказ. Правки сохраняются сразу, гости видят их при следующем открытии меню.</p>
       <button class="btn btn-main btn-wide" type="button" id="adSignIn">Войти через Google</button>
     </section>`;
     $("adSignIn").onclick = onSignIn;
@@ -182,7 +183,8 @@ export function createUI(act) {
         </div>
         <div id="adList"></div>
         ${settings.sectionForm()}
-        <div id="adTeam"></div>`;
+        <div id="adTeam"></div>
+        ${versiiStroka(esc)}`;
       $("adQ").addEventListener("input", (e) => { st.q = e.target.value.trim(); list(false); });
     }
     $("adFresh").hidden = !fresh;
@@ -331,6 +333,7 @@ export function createUI(act) {
       return;
     }
     if (d.unadmin) return act.team(st.admins.filter((e) => e !== d.unadmin));
+    if (d.versii !== undefined) return openSheet(versiiOkno(esc));
     // «Вернуть» в списке удалённых и в окне блюда
     if (d.restore) {
       t.disabled = true;
