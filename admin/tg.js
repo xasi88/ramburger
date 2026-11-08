@@ -59,6 +59,41 @@ async function bot(put, telo) {
   return j;
 }
 
+// Фото с телефона: середина фото 17:12, 1088x768 (как большое фото меню, исходники/фото-в-меню.py), JPEG.
+// Телефон уменьшает фото сам: до бота идёт 150-300 КБ вместо 3-5 МБ.
+async function szhat(fail) {
+  const src = URL.createObjectURL(fail);
+  try {
+    const img = new Image();
+    // onload, а не decode(): decode() в фоновой вкладке ждёт без конца (проверка 2026-11-08)
+    await new Promise((ok, net) => { img.onload = ok; img.onerror = () => net(new Error("не картинка")); img.src = src; });
+    const W = 1088, H = 768, k = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+    const w = W / k, h = H / k;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    c.getContext("2d").drawImage(img, (img.naturalWidth - w) / 2, (img.naturalHeight - h) / 2, w, h, 0, 0, W, H);
+    return await new Promise((ok, net) => c.toBlob((b) => (b ? ok(b) : net(new Error("jpeg"))), "image/jpeg", 0.85));
+  } finally {
+    URL.revokeObjectURL(src);
+  }
+}
+
+// Ответ: адрес фото на GitHub Pages и адрес копии в памяти телефона (её видно сразу, пока сайт выкладывает фото)
+export async function tgZagruzitFoto(fail) {
+  const blob = await szhat(fail);
+  const forma = new FormData();
+  forma.append("d", initData);
+  forma.append("foto", blob, "foto.jpg");
+  const r = await fetch(BOT + "/foto-zagruzit", { method: "POST", body: forma });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.url) {
+    const e = new Error("фото: " + r.status);
+    e.code = j.oshibka || "sboj";
+    throw e;
+  }
+  return { url: j.url, preview: URL.createObjectURL(blob) };
+}
+
 export const tgVhod = async () => (await bot("/vhod")).token;
 export const tgFoto = (id) => bot("/foto", { id });
 // Копия автору о правке Ильяса. Не дошла: правка всё равно сохранена.

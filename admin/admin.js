@@ -7,8 +7,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=1388edc1";
-import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz } from "./tg.js?v=1388edc1";
+import { createUI } from "./ui.js?v=118d5c61";
+import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=118d5c61";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -57,6 +57,7 @@ async function save(change, note, id) {
 }
 
 const KEEP = ["name", "desc", "price", "options", "photo", "icon", "hidden", "off", "hit", "discount"];
+const PREVIEW = {}; // фото с телефона: адрес на GitHub Pages → копия в памяти телефона (admin/ui.js, PIC)
 const razdel = (id) => (L.merge(BASE, live, { deleted: true }).menu.find((g) => g.id === id) || {}).title || "";
 
 const ui = createUI({
@@ -100,6 +101,34 @@ const ui = createUI({
     delete p.deleted;
     if (!Object.keys(p).length) delete cur.items[id];
   }, "Блюдо снова в меню", id),
+
+  // Только в Telegram: фото с телефона (галерея или камера) сразу у блюда, в меню оно встанет после «Сохранить».
+  // Человек закрыл выбор фото без фото: обещание так и не выполнится, это не мешает.
+  uploadPhoto: TG ? () => new Promise((gotovo) => {
+    const vybor = document.createElement("input");
+    vybor.type = "file";
+    vybor.accept = "image/*";
+    vybor.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0";
+    document.body.appendChild(vybor);
+    vybor.onchange = async () => {
+      const fail = vybor.files && vybor.files[0];
+      vybor.remove();
+      if (!fail) return gotovo(null);
+      ui.toast("Загружаю фото…");
+      try {
+        const { url, preview } = await tgZagruzitFoto(fail);
+        PREVIEW[url] = preview;
+        ui.toast("Фото у блюда. Нажмите «Сохранить». Гости увидят его в течение минуты.");
+        gotovo(url);
+      } catch (e) {
+        console.warn(e);
+        ui.toast(e.code === "bolshoe" ? "Фото слишком большое. Выберите другое." : "Фото не загрузилось. Пришлите его в чат бота: «Сменить фото», «Новое фото: прислать в чат».");
+        gotovo(null);
+      }
+    };
+    vybor.click();
+  }) : null,
+  preview: PREVIEW,
 
   // Только в Telegram: новое фото блюду присылают в чат бота, приложение закрывается
   newPhoto: TG ? async (id) => {

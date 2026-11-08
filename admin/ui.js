@@ -1,7 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=1388edc1";
+import { createSettings } from "./settings.js?v=118d5c61";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -10,10 +10,13 @@ const num = (v) => Math.max(0, Math.round(Number(String(v).replace(/[^\d]/g, "")
 const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const EYE = svg('<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>');
 const EYE_OFF = svg('<path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3 3.6M6.6 6.6C3.9 8.3 2 12 2 12s3.6 6 10 6a9.7 9.7 0 0 0 4.4-1"/>');
-// Фото из файлов сайта лежат рядом (img/food/...), фото из Telegram-бота: полный адрес (bot/, 2026-11-08)
-const PIC = (p) => (/^https?:\/\//.test(p) ? p : "../" + p);
+// Фото из файлов сайта лежат рядом (img/food/...), фото из Telegram-бота: полный адрес (bot/, 2026-11-08).
+// PREVIEW: фото с телефона, пока GitHub Pages его выкладывает (до минуты), показываем из памяти телефона.
+let PREVIEW = {};
+const PIC = (p) => PREVIEW[p] || (/^https?:\/\//.test(p) ? p : "../" + p);
 
 export function createUI(act) {
+  if (act.preview) PREVIEW = act.preview;
   const L = window.Live;
   const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null };
 
@@ -207,7 +210,8 @@ export function createUI(act) {
     const e = st.ed;
     openSheet(`<div class="ad-ed">
       <div class="ad-ed-photo">${e.photo ? `<img src="${PIC(e.photo).replace(/\.webp$/, "-big.webp")}" alt="">` : window.ICONS[e.icon] || window.ICONS.plate}
-        <button type="button" class="ad-ed-pick" data-gallery>Сменить фото</button></div>
+        <button type="button" class="ad-ed-pick" data-gallery>Сменить фото</button>
+        ${act.uploadPhoto ? `<button type="button" class="ad-ed-pick ad-ed-up" data-upload>Фото с телефона</button>` : ""}</div>
       <div class="ad-ed-body">
         <h2 id="adSheetTitle">${st.edId ? "Блюдо" : "Новое блюдо"}</h2>
         ${e.deleted ? `<p class="ad-warn">Блюдо удалено, гости его не видят.</p>` : ""}
@@ -315,6 +319,12 @@ export function createUI(act) {
     // Дальше кнопки окна блюда
     if (d.close !== undefined) return closeSheet();
     if (d.gallery !== undefined) return gallery();
+    // Фото с телефона (только в Telegram): пока грузится, человек мог открыть другое блюдо, тогда фото не ставим
+    if (d.upload !== undefined) {
+      const ed = st.ed, url = await act.uploadPhoto();
+      if (url && st.ed === ed) { readForm(); st.ed.photo = url; drawEditor(); }
+      return;
+    }
     if (d.back !== undefined) return drawEditor();
     if (d.pick !== undefined) { st.ed.photo = d.pick; return drawEditor(); }
     if (d.sizes) {
