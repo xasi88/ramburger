@@ -78,20 +78,21 @@ async function szhat(fail) {
   }
 }
 
-// Ответ: адрес фото на GitHub Pages и адрес копии в памяти телефона (её видно сразу, пока сайт выкладывает фото)
-export async function tgZagruzitFoto(fail) {
+const vBase64 = (blob) => new Promise((ok, net) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(",")[1] || "");
+  r.onerror = () => net(r.error);
+  r.readAsDataURL(blob);
+});
+
+// Фото с телефона. Из России без VPN Cloudflare не принимает запрос больше ~5 КБ (замер 2026-11-08),
+// поэтому фото идёт в базу Firebase (vBazu: admin.js, папка foto), а боту только номер: он заберёт фото
+// и положит на GitHub. Ответ: адрес фото и копия в памяти телефона (её видно сразу, пока сайт выкладывает фото).
+export async function tgZagruzitFoto(fail, vBazu) {
   const blob = await szhat(fail);
-  const forma = new FormData();
-  forma.append("d", initData);
-  forma.append("foto", blob, "foto.jpg");
-  const r = await fetch(BOT + "/foto-zagruzit", { method: "POST", body: forma });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.url) {
-    const e = new Error("фото: " + r.status);
-    e.code = j.oshibka || "sboj";
-    throw e;
-  }
-  return { url: j.url, preview: URL.createObjectURL(blob) };
+  const id = await vBazu(await vBase64(blob));
+  const { url } = await bot("/foto-iz-bazy", { id });
+  return { url, preview: URL.createObjectURL(blob) };
 }
 
 export const tgVhod = async () => (await bot("/vhod")).token;

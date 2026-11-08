@@ -7,8 +7,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=118d5c61";
-import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=118d5c61";
+import { createUI } from "./ui.js?v=55d678e8";
+import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=55d678e8";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -45,8 +45,12 @@ async function save(change, note, id) {
       tx.set(LIVE, { json, at: serverTimestamp() });
     });
     addDoc(collection(db, "history"), { json, at: serverTimestamp(), by: kto }).catch(() => { /* копия не главное */ });
-    // Правка Ильяса из Telegram: бот пришлёт автору, что изменилось (как о правке в чате)
-    if (TG) tgKopiya(id ? { id, bylo } : { zametka: note });
+    // Правка Ильяса из Telegram: бот пришлёт автору, что изменилось (как о правке в чате).
+    // Запрос к боту до ~4 КБ (больше Cloudflare из России не принимает): длинная правка уходит одной заметкой.
+    if (TG) {
+      const telo = id ? { id, bylo } : { zametka: note };
+      tgKopiya(JSON.stringify(telo).length < 2500 ? telo : { zametka: note });
+    }
     ui.toast(note || "Сохранено. Гости увидят при следующем открытии меню.");
     return true;
   } catch (e) {
@@ -116,7 +120,9 @@ const ui = createUI({
       if (!fail) return gotovo(null);
       ui.toast("Загружаю фото…");
       try {
-        const { url, preview } = await tgZagruzitFoto(fail);
+        // Фото в базу (папка foto, правила: только по пропуску из Telegram), бот заберёт его по номеру
+        const vBazu = async (data) => (await addDoc(collection(db, "foto"), { data, at: serverTimestamp(), by: kto })).id;
+        const { url, preview } = await tgZagruzitFoto(fail, vBazu);
         PREVIEW[url] = preview;
         ui.toast("Фото у блюда. Нажмите «Сохранить». Гости увидят его в течение минуты.");
         gotovo(url);
