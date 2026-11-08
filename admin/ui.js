@@ -1,7 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=ade89d4d";
+import { createSettings } from "./settings.js?v=1388edc1";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -342,9 +342,18 @@ export function createUI(act) {
       if (ok) closeSheet();
       return;
     }
+    // Удаление (проба 2026-11-08): на месте «Удалить блюдо» встаёт «Нет, оставить», «Да, удалить» ниже, с названием.
+    // Повторное нажатие в то же место (палец после закрытия клавиатуры) ничего не удаляет.
     if (d.remove !== undefined) {
-      if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Точно удалить? Нажмите ещё раз"; return; }
+      t.outerHTML = `<button type="button" class="btn btn-soft btn-wide" data-keep>Нет, оставить</button>
+        <button type="button" class="ad-del" data-sure>Да, удалить «${esc(st.ed.name || "без названия")}»</button>`;
+      return;
+    }
+    if (d.keep !== undefined) { readForm(); return drawEditor(); }
+    if (d.sure !== undefined) {
+      t.disabled = true;
       if (await act.remove(st.edId)) closeSheet();
+      else t.disabled = false;
     }
   });
   document.addEventListener("input", (ev) => { if (st.ed && ev.target.closest(".ad-ed")) warn(); });

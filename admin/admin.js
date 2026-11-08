@@ -7,8 +7,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=ade89d4d";
-import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz } from "./tg.js?v=ade89d4d";
+import { createUI } from "./ui.js?v=1388edc1";
+import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz } from "./tg.js?v=1388edc1";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;

@@ -40,6 +40,8 @@ export function tgStart() {
     signal("web_app_set_background_color", { color: cvet });
   }
   signal("web_app_expand");
+  // Список блюд длинный: смахивание вниз листает его, а не сворачивает приложение
+  signal("web_app_setup_swipe_behavior", { allow_vertical_swipe: false });
   signal("web_app_ready");
 }
 
