@@ -1,7 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=a53962a7";
+import { createSettings } from "./settings.js?v=0c378725";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -65,8 +65,9 @@ export function createUI(act) {
     </section>`;
   }
 
-  // Что видно в списке
+  // Что видно в списке. Удалённые блюда (deleted) видны только во вкладке «Удалённые», их можно вернуть.
   const all = () => st.menu.menu.flatMap((g) => g.items.map((it) => ({ it, g })));
+  const alive = () => all().filter(({ it }) => !it.deleted);
   const needs = (it) => !String(it.name || "").trim() || !L.priced(it);
   const FILTERS = [
     ["all", "Все", () => true],
@@ -74,7 +75,9 @@ export function createUI(act) {
     ["hidden", "Скрыто", (it) => !L.visible(it)],
     ["hits", "Хиты", (it) => it.hit],
     ["sale", "Скидки", (it) => it.discount > 0],
+    ["deleted", "Удалённые", () => true],
   ];
+  const pass = (id, it) => (id === "deleted") === !!it.deleted && FILTERS.find((x) => x[0] === id)[2](it);
 
   function priceText(it) {
     if (it.options && it.options.length) return it.options.map((o) => `${esc(o.name)} ${rub(o.price)}`).join(" · ");
@@ -84,6 +87,10 @@ export function createUI(act) {
 
   function row(it) {
     const vis = L.visible(it);
+    const tail = it.deleted
+      ? `<button class="ad-mini" type="button" data-restore="${esc(it.id)}">Вернуть</button>`
+      : `<button class="ad-tg${it.hidden ? "" : " on"}" type="button" data-toggle="show" data-id="${esc(it.id)}" aria-pressed="${!it.hidden}" aria-label="Показывать в меню">${it.hidden ? EYE_OFF : EYE}<span>${it.hidden ? "Скрыто" : "В меню"}</span></button>
+      <button class="ad-tg ad-hit${it.hit ? " on" : ""}" type="button" data-toggle="hit" data-id="${esc(it.id)}" aria-pressed="${!!it.hit}" aria-label="Хит"><i>Хит</i><span>${it.hit ? "Да" : "Нет"}</span></button>`;
     return `<article class="ad-row${vis ? "" : " ad-dim"}">
       <button class="ad-open" type="button" data-edit="${esc(it.id)}">
         <span class="ad-thumb">${thumb(it)}</span>
@@ -92,31 +99,31 @@ export function createUI(act) {
           <small>${priceText(it)}${it.discount > 0 ? ` <em class="ad-mk">−${it.discount}%</em>` : ""}${it.off ? ` <em class="ad-mk">нет в наличии</em>` : ""}</small>
         </span>
       </button>
-      <button class="ad-tg${it.hidden ? "" : " on"}" type="button" data-toggle="show" data-id="${esc(it.id)}" aria-pressed="${!it.hidden}" aria-label="Показывать в меню">${it.hidden ? EYE_OFF : EYE}<span>${it.hidden ? "Скрыто" : "В меню"}</span></button>
-      <button class="ad-tg ad-hit${it.hit ? " on" : ""}" type="button" data-toggle="hit" data-id="${esc(it.id)}" aria-pressed="${!!it.hit}" aria-label="Хит"><i>Хит</i><span>${it.hit ? "Да" : "Нет"}</span></button>
+      ${tail}
     </article>`;
   }
 
   function list() {
-    const f = FILTERS.find((x) => x[0] === st.filter)[2];
     const q = st.q.toLowerCase().replace(/ё/g, "е");
     const hit = (it, g) => !q || `${it.name} ${it.desc} ${g.title}`.toLowerCase().replace(/ё/g, "е").includes(q);
+    const gone = st.filter === "deleted";
     const html = st.menu.menu.map((g) => {
-      const items = g.items.filter((it) => f(it) && hit(it, g));
+      const items = g.items.filter((it) => pass(st.filter, it) && hit(it, g));
       if (!items.length && (st.filter !== "all" || q)) return "";
-      const shown = !g.hidden;
+      const shown = !g.hidden, here = g.items.filter((it) => !it.deleted);
       return `<section class="ad-sec${shown ? "" : " ad-sec-off"}">
         <header class="ad-sec-head">
-          <h2>${esc(g.title)} <span>${shown ? `${g.items.filter(L.visible).length} из ${g.items.length}` : "скрыт"}</span></h2>
+          <h2>${esc(g.title)} <span>${shown ? `${here.filter(L.visible).length} из ${here.length}` : "скрыт"}</span></h2>
           <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
           ${g.added ? `<button type="button" class="ad-mini" data-delsec="${esc(g.id)}">Удалить раздел</button>` : ""}
         </header>
-        ${shown ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
-        ${shown && !g.items.length ? `<p class="ad-sec-note">Раздел пустой, гости его пока не видят. Нажмите «+ Блюдо» и выберите этот раздел.</p>` : ""}
+        ${shown || gone ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
+        ${shown && !gone && !here.length ? `<p class="ad-sec-note">Раздел пустой, гости его пока не видят. Нажмите «+ Блюдо» и выберите этот раздел.</p>` : ""}
         ${items.map(row).join("")}
       </section>`;
     }).join("");
-    $("adList").innerHTML = html || `<p class="ad-empty">Ничего не нашлось.</p>`;
+    const top = gone ? `<p class="ad-sec-note">Удалённые блюда гости не видят. Нажмите «Вернуть», и блюдо снова в меню на прежнем месте.</p>` : "";
+    $("adList").innerHTML = top + (html || `<p class="ad-empty">${gone ? "Удалённых блюд нет." : "Ничего не нашлось."}</p>`);
   }
 
   function team() {
@@ -137,7 +144,7 @@ export function createUI(act) {
     const first = !st.menu;
     st.menu = menu; st.admins = admins; st.email = email;
     $("adOut").hidden = false; $("adAdd").hidden = false;
-    const fresh = all().filter(({ it }) => needs(it)).length;
+    const fresh = alive().filter(({ it }) => needs(it)).length;
     if (first || !$("adList")) {
       $("adMain").innerHTML = `
         <div class="ad-top">
@@ -154,8 +161,9 @@ export function createUI(act) {
     }
     $("adFresh").hidden = !fresh;
     $("adFresh").innerHTML = `Новых фото без названия или цены: <b>${fresh}</b>. Откройте фото, впишите название и цену, включите «В меню».`;
-    $("adTabs").innerHTML = FILTERS.map(([id, name, f]) => {
-      const n = all().filter(({ it }) => f(it)).length;
+    $("adTabs").innerHTML = FILTERS.map(([id, name]) => {
+      const n = all().filter(({ it }) => pass(id, it)).length;
+      if (id === "deleted" && !n && st.filter !== id) return "";
       return `<button type="button" role="tab" aria-selected="${st.filter === id}" data-filter="${id}">${name} <span>${n}</span></button>`;
     }).join("");
     $("adSet").innerHTML = settings.card(menu.order);
@@ -172,9 +180,8 @@ export function createUI(act) {
     st.ed = JSON.parse(JSON.stringify({
       name: it.name || "", desc: it.desc || "", price: it.price || 0, options: it.options || null, photo: it.photo || "",
       icon: it.icon || "plate", hidden: !!it.hidden, off: !!it.off, hit: !!it.hit, discount: it.discount || 0,
-      section: found ? found.g.id : st.menu.menu[0].id,
+      section: found ? found.g.id : st.menu.menu[0].id, deleted: !!it.deleted,
     }));
-    st.ed.added = !found || !!act.isAdded(id);
     drawEditor();
   }
 
@@ -203,6 +210,7 @@ export function createUI(act) {
         <button type="button" class="ad-ed-pick" data-gallery>Сменить фото</button></div>
       <div class="ad-ed-body">
         <h2 id="adSheetTitle">${st.edId ? "Блюдо" : "Новое блюдо"}</h2>
+        ${e.deleted ? `<p class="ad-warn">Блюдо удалено, гости его не видят.</p>` : ""}
         <label class="ad-f"><span>Название</span><input id="edName" maxlength="60" value="${esc(e.name)}" placeholder="Например, Чизбургер"></label>
         <label class="ad-f"><span>Состав</span><textarea id="edDesc" maxlength="200" rows="2" placeholder="Можно оставить пустым">${esc(e.desc)}</textarea></label>
         <label class="ad-f"><span>Раздел</span><select id="edSec">${sections().map((s) => `<option value="${esc(s.id)}"${s.id === e.section ? " selected" : ""}>${esc(s.title)}</option>`).join("")}</select></label>
@@ -217,7 +225,9 @@ export function createUI(act) {
         <div class="ad-ed-actions">
           <button type="button" class="btn btn-main btn-wide" data-save>Сохранить</button>
           <button type="button" class="btn btn-soft btn-wide" data-close>Отмена</button>
-          ${e.added && st.edId ? `<button type="button" class="ad-del" data-remove>Удалить блюдо</button>` : ""}
+          ${!st.edId ? "" : e.deleted
+            ? `<button type="button" class="btn btn-soft btn-wide" data-restore="${esc(st.edId)}">Вернуть в меню</button>`
+            : `<button type="button" class="ad-del" data-remove>Удалить блюдо</button>`}
         </div>
       </div>
     </div>`);
@@ -249,7 +259,7 @@ export function createUI(act) {
   function gallery() {
     readForm();
     const used = {};
-    all().forEach(({ it }) => { if (it.photo) (used[it.photo] = used[it.photo] || []).push(it.name || "без названия"); });
+    alive().forEach(({ it }) => { if (it.photo) (used[it.photo] = used[it.photo] || []).push(it.name || "без названия"); });
     const photos = Object.keys(used).concat(act.photos()).filter((p, i, a) => a.indexOf(p) === i).sort();
     openSheet(`<div class="ad-gal-wrap">
       <h2 id="adSheetTitle">Фото блюда</h2>
@@ -290,6 +300,14 @@ export function createUI(act) {
       return;
     }
     if (d.unadmin) return act.team(st.admins.filter((e) => e !== d.unadmin));
+    // «Вернуть» в списке удалённых и в окне блюда
+    if (d.restore) {
+      t.disabled = true;
+      const ok = await act.restore(d.restore);
+      t.disabled = false;
+      if (ok && st.ed) closeSheet();
+      return;
+    }
     if (!st.ed) { if (d.close !== undefined) closeSheet(); return; }
     // Дальше кнопки окна блюда
     if (d.close !== undefined) return closeSheet();

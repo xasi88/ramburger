@@ -3,10 +3,11 @@
 // Здесь: адрес базы, чтение без библиотеки Firebase, сложение правок с меню, что видит гость.
 // Файлом пользуются меню (js/boot.js), админка (admin/) и тесты.
 //
-// Вид правок: { "items": { "<id>": { name, desc, price, options, photo, icon, hidden, off, hit, discount, section, added } },
+// Вид правок: { "items": { "<id>": { name, desc, price, options, photo, icon, hidden, off, hit, discount, section, added, deleted } },
 //               "sections": { "<id>": { hidden, title, added } },
 //               "order": { night, pickup, places: [{ name, price }], pay: ["..."] } }
 // added: блюдо или раздел создан в админке, в data/menu.js его нет. Новый раздел встаёт в конец меню.
+// deleted: блюдо удалено (админка или бот, 2026-11-08). Гость его не видит, правка остаётся: блюдо можно вернуть.
 // order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому. price null: цену доставки скажет кафе.
 
 (function (root) {
@@ -21,7 +22,7 @@
   const CACHE = "ramburger-live";
 
   // Что можно менять у блюда
-  const FIELDS = ["name", "desc", "price", "options", "photo", "icon", "hidden", "off", "hit", "discount"];
+  const FIELDS = ["name", "desc", "price", "options", "photo", "icon", "hidden", "off", "hit", "discount", "deleted"];
 
   const copy = (o) => JSON.parse(JSON.stringify(o));
 
@@ -54,8 +55,8 @@
     return h >= cafe.open && h < cafe.close;
   }
 
-  // Меню из файла + правки админки
-  function merge(base, live) {
+  // Меню из файла + правки админки. Удалённые блюда убираются; keep.deleted оставляет их (админка, бот).
+  function merge(base, live, keep) {
     const data = copy(base);
     live = live && typeof live === "object" ? live : {};
     data.order = orderOf(data.order, live.order);
@@ -81,15 +82,16 @@
       }
     });
     data.menu.forEach((g) => { if (secs[g.id] && typeof secs[g.id].hidden === "boolean") g.hidden = secs[g.id].hidden; });
+    if (!(keep && keep.deleted)) data.menu.forEach((g) => { g.items = g.items.filter((it) => !it.deleted); });
     return data;
   }
 
-  // Гость видит блюдо, если оно не скрыто, у него есть название и цена
+  // Гость видит блюдо, если оно не скрыто и не удалено, у него есть название и цена
   function priced(it) {
     if (it.options && it.options.length) return it.options.every((o) => Number(o.price) > 0 && String(o.name || "").trim());
     return Number(it.price) > 0;
   }
-  const visible = (it) => !it.hidden && !!String(it.name || "").trim() && priced(it);
+  const visible = (it) => !it.hidden && !it.deleted && !!String(it.name || "").trim() && priced(it);
 
   // Правки из базы. Документа ещё нет: правок нет (live: null).
   async function fetchLive(ms) {

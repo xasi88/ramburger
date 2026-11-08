@@ -6,7 +6,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=a53962a7";
+import { createUI } from "./ui.js?v=0c378725";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -21,7 +21,8 @@ const baseIds = new Set(BASE.menu.flatMap((g) => g.items.map((it) => it.id)));
 // Фото блюд из файла меню и фото без блюда (spare): всё это видно в выборе фото
 const basePhotos = BASE.menu.flatMap((g) => g.items.map((it) => it.photo)).filter(Boolean).concat(BASE.spare || []);
 
-const draw = () => ui.render(L.merge(BASE, live), admins, user.email);
+// Удалённые блюда админка видит (вкладка «Удалённые»), гость нет
+const draw = () => ui.render(L.merge(BASE, live, { deleted: true }), admins, user.email);
 const said = (e) => (e && e.code === "permission-denied" ? "Нет прав на правку меню" : "Не сохранилось. Проверьте интернет и попробуйте ещё раз.");
 
 // Записать правку: change(правки) меняет объект правок на месте
@@ -53,7 +54,6 @@ const KEEP = ["name", "desc", "price", "options", "photo", "icon", "hidden", "of
 const ui = createUI({
   signOut: () => signOut(auth),
   photos: () => basePhotos,
-  isAdded: (id) => !!(id && !baseIds.has(id)),
 
   // Быстрые переключатели в списке: «В меню», «Хит»
   patch: (id, p) => save((cur) => { cur.items[id] = Object.assign(cur.items[id] || {}, p); },
@@ -82,8 +82,15 @@ const ui = createUI({
     return save((cur) => { cur.items[newId] = Object.assign(cur.items[newId] || {}, p); }, id ? "Сохранено" : "Блюдо добавлено");
   },
 
-  // Удалить можно только блюдо, созданное в админке. Блюда из меню кафе скрывают.
-  remove: (id) => save((cur) => { delete cur.items[id]; }, "Блюдо удалено"),
+  // Удалить можно любое блюдо (2026-11-08): отметка deleted, правка остаётся. Вернуть: вкладка «Удалённые».
+  remove: (id) => save((cur) => { cur.items[id] = Object.assign(cur.items[id] || {}, { deleted: true }); },
+    "Блюдо удалено. Вернуть можно во вкладке «Удалённые»."),
+  restore: (id) => save((cur) => {
+    const p = cur.items[id];
+    if (!p) return;
+    delete p.deleted;
+    if (!Object.keys(p).length) delete cur.items[id];
+  }, "Блюдо снова в меню"),
 
   async team(emails) {
     try {

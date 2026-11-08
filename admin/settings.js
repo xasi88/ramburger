@@ -107,7 +107,7 @@ export function createSettings(h) {
     // Удалить можно только раздел из админки и только пустой: блюда сначала переносят
     if (d.delsec) {
       const g = h.get().menu.find((x) => x.id === d.delsec);
-      if (g && g.items.length) return h.toast("Сначала перенесите блюда в другой раздел");
+      if (g && g.items.some((it) => !it.deleted)) return h.toast("Сначала перенесите блюда в другой раздел");
       if (d.sure !== "1") { d.sure = "1"; t.textContent = "Точно удалить?"; return; }
       return h.act.removeSection(d.delsec);
     }
