@@ -1,7 +1,7 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=55d678e8";
+import { createSettings } from "./settings.js?v=9ec25e9b";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -18,7 +18,8 @@ const PIC = (p) => PREVIEW[p] || (/^https?:\/\//.test(p) ? p : "../" + p);
 export function createUI(act) {
   if (act.preview) PREVIEW = act.preview;
   const L = window.Live;
-  const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null };
+  const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null, lock: 0 };
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Окно снизу: правка блюда или выбор фото
   function openSheet(html) {
@@ -94,7 +95,7 @@ export function createUI(act) {
       ? `<button class="ad-mini" type="button" data-restore="${esc(it.id)}">Вернуть</button>`
       : `<button class="ad-tg${it.hidden ? "" : " on"}" type="button" data-toggle="show" data-id="${esc(it.id)}" aria-pressed="${!it.hidden}" aria-label="Показывать в меню">${it.hidden ? EYE_OFF : EYE}<span>${it.hidden ? "Скрыто" : "В меню"}</span></button>
       <button class="ad-tg ad-hit${it.hit ? " on" : ""}" type="button" data-toggle="hit" data-id="${esc(it.id)}" aria-pressed="${!!it.hit}" aria-label="Хит"><i>Хит</i><span>${it.hit ? "Да" : "Нет"}</span></button>`;
-    return `<article class="ad-row${vis ? "" : " ad-dim"}">
+    return `<article class="ad-row${vis ? "" : " ad-dim"}" data-row="${esc(it.id)}">
       <button class="ad-open" type="button" data-edit="${esc(it.id)}">
         <span class="ad-thumb">${thumb(it)}</span>
         <span class="ad-info">
@@ -106,15 +107,19 @@ export function createUI(act) {
     </article>`;
   }
 
-  function list() {
+  // Порядок списка: js/live.js (sortSections, sortItems). Включённое вверху, выключенное внизу.
+  // move: строки, которые сменили место, плавно переезжают (поиск и вкладки перерисовывают без переезда).
+  function list(move = true) {
+    const box = $("adList"), was = {};
+    if (move) box.querySelectorAll("[data-row]").forEach((el) => { was[el.dataset.row] = el.getBoundingClientRect().top; });
     const q = st.q.toLowerCase().replace(/ё/g, "е");
     const hit = (it, g) => !q || `${it.name} ${it.desc} ${g.title}`.toLowerCase().replace(/ё/g, "е").includes(q);
     const gone = st.filter === "deleted";
-    const html = st.menu.menu.map((g) => {
-      const items = g.items.filter((it) => pass(st.filter, it) && hit(it, g));
+    const html = L.sortSections(st.menu.menu).map((g) => {
+      const items = L.sortItems(g.items.filter((it) => pass(st.filter, it) && hit(it, g)));
       if (!items.length && (st.filter !== "all" || q)) return "";
       const shown = !g.hidden, here = g.items.filter((it) => !it.deleted);
-      return `<section class="ad-sec${shown ? "" : " ad-sec-off"}">
+      return `<section class="ad-sec${shown ? "" : " ad-sec-off"}" data-row="s:${esc(g.id)}">
         <header class="ad-sec-head">
           <h2>${esc(g.title)} <span>${shown ? `${here.filter(L.visible).length} из ${here.length}` : "скрыт"}</span></h2>
           <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
@@ -126,7 +131,25 @@ export function createUI(act) {
       </section>`;
     }).join("");
     const top = gone ? `<p class="ad-sec-note">Удалённые блюда гости не видят. Нажмите «Вернуть», и блюдо снова в меню на прежнем месте.</p>` : "";
-    $("adList").innerHTML = top + (html || `<p class="ad-empty">${gone ? "Удалённых блюд нет." : "Ничего не нашлось."}</p>`);
+    box.innerHTML = top + (html || `<p class="ad-empty">${gone ? "Удалённых блюд нет." : "Ничего не нашлось."}</p>`);
+    if (move) slide(box, was);
+  }
+
+  // Переезд: строка едет со старого места на новое, раздел едет целиком.
+  // Полсекунды после переезда нажатия в списке не срабатывают: на место уехавшей строки встаёт соседняя,
+  // и второе нажатие попало бы в чужое блюдо (так 2026-11-08 удалился «Гамбургер»).
+  function slide(box, was) {
+    const els = Array.from(box.querySelectorAll("[data-row]")), dy = new Map();
+    els.forEach((el) => dy.set(el, (el.dataset.row in was ? was[el.dataset.row] : NaN) - el.getBoundingClientRect().top));
+    let moved = false;
+    els.forEach((el) => {
+      const sec = el.parentElement.closest("[data-row]");
+      const d = dy.get(el) - (sec && isFinite(dy.get(sec)) ? dy.get(sec) : 0);
+      if (!isFinite(d) || Math.abs(d) < 2) return;
+      moved = true;
+      if (!reduced() && el.animate) el.animate([{ transform: `translateY(${d}px)` }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" });
+    });
+    if (moved) st.lock = Date.now() + 600;
   }
 
   function team() {
@@ -143,7 +166,7 @@ export function createUI(act) {
   }
 
   // Главный экран: первый раз целиком, потом только список
-  function render(menu, admins, email) {
+  function render(menu, admins, email, move = true) {
     const first = !st.menu;
     st.menu = menu; st.admins = admins; st.email = email;
     $("adOut").hidden = false; $("adAdd").hidden = false;
@@ -160,7 +183,7 @@ export function createUI(act) {
         <div id="adList"></div>
         ${settings.sectionForm()}
         <div id="adTeam"></div>`;
-      $("adQ").addEventListener("input", (e) => { st.q = e.target.value.trim(); list(); });
+      $("adQ").addEventListener("input", (e) => { st.q = e.target.value.trim(); list(false); });
     }
     $("adFresh").hidden = !fresh;
     $("adFresh").innerHTML = `Новых фото без названия или цены: <b>${fresh}</b>. Откройте фото, впишите название и цену, включите «В меню».`;
@@ -171,11 +194,11 @@ export function createUI(act) {
     }).join("");
     $("adSet").innerHTML = settings.card(menu.order);
     $("adTeam").innerHTML = team();
-    list();
+    list(move);
   }
 
   // Окно правки блюда
-  const sections = () => st.menu.menu.map((g) => ({ id: g.id, title: g.title }));
+  const sections = () => L.sortSections(st.menu.menu).map((g) => ({ id: g.id, title: g.title }));
   function editor(id) {
     const found = all().find(({ it }) => it.id === id);
     const it = found ? found.it : { id: null, name: "", desc: "", price: 0, icon: "plate", hidden: false };
@@ -282,12 +305,13 @@ export function createUI(act) {
   document.addEventListener("click", async (ev) => {
     const t = ev.target.closest("button, [data-close]");
     if (!t) return;
+    if (Date.now() < st.lock && t.closest("#adList")) return; // строки ещё переезжают: slide()
     const d = t.dataset;
     if (d.signout !== undefined) return act.signOut();
     if (d.newphoto !== undefined) return act.newPhoto(st.edId);
     if (t.id === "adOut") return act.signOut();
     if (t.id === "adAdd") return editor(null);
-    if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email); return; }
+    if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email, false); return; }
     if (d.edit) return editor(d.edit);
     // Тумблеры меняются на экране сразу, запись в базу идёт следом. Не записалось: тумблер встаёт назад.
     if (d.toggle) {

@@ -1,6 +1,7 @@
 // Данные для сайта: меню из data/menu.js с правками админки (js/live.js) и общие расчёты цен.
 // Гость видит только блюда с названием и ценой, не скрытые, из включённых разделов.
 // Блюда с отметкой «Хит» дополнительно стоят в разделе «Хиты» вверху меню.
+// В разделе сначала то, что можно заказать, «нет в наличии» в конце (Live.sortItems, 2026-11-08).
 // Комбо со своей ценой из нескольких блюд (promos.combos) у кафе нет: корзина их понимает.
 // Заказ у гостя (ночью, с собой, сёла, оплата): window.ORDER, вид в js/live.js.
 
@@ -9,9 +10,9 @@
   const promos = Object.assign({ banners: [], combos: [], bonus: { active: false, min: 0, percent: 0 } }, src.promos || {});
   const shown = src.menu
     .filter((g) => !g.hidden)
-    .map((g) => Object.assign({}, g, { items: g.items.filter(window.Live.visible) }))
+    .map((g) => Object.assign({}, g, { items: window.Live.sortItems(g.items.filter(window.Live.visible)) }))
     .filter((g) => g.items.length);
-  const hits = shown.flatMap((g) => g.items).filter((it) => it.hit);
+  const hits = window.Live.sortItems(shown.flatMap((g) => g.items).filter((it) => it.hit));
 
   window.CAFE = src.cafe;
   window.ORDER = window.Live.orderOf(src.order);

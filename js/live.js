@@ -91,7 +91,17 @@
     if (it.options && it.options.length) return it.options.every((o) => Number(o.price) > 0 && String(o.name || "").trim());
     return Number(it.price) > 0;
   }
-  const visible = (it) => !it.hidden && !it.deleted && !!String(it.name || "").trim() && priced(it);
+  const named = (it) => !!String(it.name || "").trim();
+  const visible = (it) => !it.hidden && !it.deleted && named(it) && priced(it);
+
+  // Порядок показа (2026-11-08, решение автора): в разделе сначала блюда в меню, потом «нет в наличии»,
+  // скрытые с названием, фото без названия или цены, удалённые. Внутри группы порядок меню.
+  // Порядок в базе не хранится: блюдо, которое снова показали, встаёт на прежнее место.
+  const rank = (it) => (it.deleted ? 4 : !named(it) || !priced(it) ? 3 : it.hidden ? 2 : it.off ? 1 : 0);
+  const byRank = (list, r) => list.map((x, i) => [x, i]).sort((a, b) => r(a[0]) - r(b[0]) || a[1] - b[1]).map((x) => x[0]);
+  const sortItems = (items) => byRank(items, rank);
+  // Разделы: видимые, потом скрытые (админка и бот; гость скрытых разделов не видит)
+  const sortSections = (menu) => byRank(menu, (g) => (g.hidden ? 1 : 0));
 
   // Правки из базы. Документа ещё нет: правок нет (live: null).
   async function fetchLive(ms) {
@@ -110,7 +120,7 @@
     }
   }
 
-  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, fetchLive, orderOf, openNow, fee };
+  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, rank, sortItems, sortSections, fetchLive, orderOf, openNow, fee };
 
   // В меню файл стоит в <head> с отметкой data-early: запрос к базе уходит сразу, пока грузится страница.
   // Первый запрос к серверу Google бывает дольше 2 секунд (2026-11-05: 2,5 с, меню взяло старую копию).
