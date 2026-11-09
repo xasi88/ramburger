@@ -1,8 +1,8 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=f8217dbc";
-import { versiiStroka, versiiOkno } from "./versii.js?v=f8217dbc";
+import { createSettings } from "./settings.js?v=098e48f8";
+import { versiiStroka, versiiOkno } from "./versii.js?v=098e48f8";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -10,6 +10,8 @@ const rub = (n) => Number(n).toLocaleString("ru-RU") + " ₽";
 const num = (v) => Math.max(0, Math.round(Number(String(v).replace(/[^\d]/g, "")) || 0));
 const svg = (d) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const EYE = svg('<path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>');
+const UP = svg('<path d="M12 19V5M5 12l7-7 7 7"/>');
+const DOWN = svg('<path d="M12 5v14M5 12l7 7 7-7"/>');
 const EYE_OFF = svg('<path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6.4 0 10 6 10 6a17 17 0 0 1-3 3.6M6.6 6.6C3.9 8.3 2 12 2 12s3.6 6 10 6a9.7 9.7 0 0 0 4.4-1"/>');
 // Фото из файлов сайта лежат рядом (img/food/...), фото из Telegram-бота: полный адрес (bot/, 2026-11-08).
 // PREVIEW: фото с телефона, пока GitHub Pages его выкладывает (до минуты), показываем из памяти телефона.
@@ -19,7 +21,8 @@ const PIC = (p) => PREVIEW[p] || (/^https?:\/\//.test(p) ? p : "../" + p);
 export function createUI(act) {
   if (act.preview) PREVIEW = act.preview;
   const L = window.Live;
-  const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null, lock: 0 };
+  // sort: режим «Порядок», стрелки у разделов и блюд (2026-11-09)
+  const st = { filter: "all", q: "", menu: null, admins: null, email: "", ed: null, edId: null, lock: 0, sort: false };
   const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Окно снизу: правка блюда или выбор фото
@@ -90,9 +93,13 @@ export function createUI(act) {
   }
   const thumb = (it) => (it.photo ? `<img src="${PIC(it.photo)}" alt="" loading="lazy" decoding="async">` : window.ICONS[it.icon] || window.ICONS.plate);
 
-  function row(it) {
+  // Стрелки «выше», «ниже». Двигать можно только среди соседей той же группы (js/live.js, rank).
+  const arrows = (kind, id, up, down) => `<button class="ad-tg" type="button" data-move="${kind}" data-id="${esc(id)}" data-dir="-1"${up ? "" : " disabled"} aria-label="Выше">${UP}<span>Выше</span></button>
+      <button class="ad-tg" type="button" data-move="${kind}" data-id="${esc(id)}" data-dir="1"${down ? "" : " disabled"} aria-label="Ниже">${DOWN}<span>Ниже</span></button>`;
+
+  function row(it, up, down) {
     const vis = L.visible(it);
-    const tail = it.deleted
+    const tail = st.sort ? arrows("i", it.id, up, down) : it.deleted
       ? `<button class="ad-mini" type="button" data-restore="${esc(it.id)}">Вернуть</button>`
       : `<button class="ad-tg${it.hidden ? "" : " on"}" type="button" data-toggle="show" data-id="${esc(it.id)}" aria-pressed="${!it.hidden}" aria-label="Показывать в меню">${it.hidden ? EYE_OFF : EYE}<span>${it.hidden ? "Скрыто" : "В меню"}</span></button>
       <button class="ad-tg ad-hit${it.hit ? " on" : ""}" type="button" data-toggle="hit" data-id="${esc(it.id)}" aria-pressed="${!!it.hit}" aria-label="Хит"><i>Хит</i><span>${it.hit ? "Да" : "Нет"}</span></button>`;
@@ -110,36 +117,74 @@ export function createUI(act) {
 
   // Порядок списка: js/live.js (sortSections, sortItems). Включённое вверху, выключенное внизу.
   // move: строки, которые сменили место, плавно переезжают (поиск и вкладки перерисовывают без переезда).
-  function list(move = true) {
+  // keep: строка, которая остаётся под пальцем (режим «Порядок»): страница едет вместе с ней.
+  function list(move = true, keep) {
     const box = $("adList"), was = {};
-    if (move) box.querySelectorAll("[data-row]").forEach((el) => { was[el.dataset.row] = el.getBoundingClientRect().top; });
+    // Переезд ещё идёт (база ответила раньше конца анимации): сначала довести строки до места, потом мерить
+    if (move) box.querySelectorAll("[data-row]").forEach((el) => {
+      if (el.getAnimations) el.getAnimations().forEach((a) => a.finish());
+      was[el.dataset.row] = el.getBoundingClientRect().top;
+    });
+    const same = (a, b, r) => !!a && !!b && r(a) === r(b);
+    const secs = L.sortSections(st.menu.menu), secRank = (g) => (g.hidden ? 1 : 0);
     const q = st.q.toLowerCase().replace(/ё/g, "е");
     const hit = (it, g) => !q || `${it.name} ${it.desc} ${g.title}`.toLowerCase().replace(/ё/g, "е").includes(q);
     const gone = st.filter === "deleted";
-    const html = L.sortSections(st.menu.menu).map((g) => {
+    const html = secs.map((g, si) => {
       const items = L.sortItems(g.items.filter((it) => pass(st.filter, it) && hit(it, g)));
+      const tools = st.sort
+        ? arrows("s", g.id, same(secs[si - 1], g, secRank), same(secs[si + 1], g, secRank))
+        : `<button class="ad-sw${!g.hidden ? " on" : ""}" type="button" role="switch" aria-checked="${!g.hidden}" data-sec="${esc(g.id)}"><i></i>${!g.hidden ? "Раздел виден" : "Раздел скрыт"}</button>
+          ${g.added ? `<button type="button" class="ad-mini" data-delsec="${esc(g.id)}">Удалить раздел</button>` : ""}`;
       if (!items.length && (st.filter !== "all" || q)) return "";
       const shown = !g.hidden, here = g.items.filter((it) => !it.deleted);
       return `<section class="ad-sec${shown ? "" : " ad-sec-off"}" data-row="s:${esc(g.id)}">
         <header class="ad-sec-head">
           <h2>${esc(g.title)} <span>${shown ? `${here.filter(L.visible).length} из ${here.length}` : "скрыт"}</span></h2>
-          <button class="ad-sw${shown ? " on" : ""}" type="button" role="switch" aria-checked="${shown}" data-sec="${esc(g.id)}"><i></i>${shown ? "Раздел виден" : "Раздел скрыт"}</button>
-          ${g.added ? `<button type="button" class="ad-mini" data-delsec="${esc(g.id)}">Удалить раздел</button>` : ""}
+          <div class="ad-sec-tools">${tools}</div>
         </header>
-        ${shown || gone ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
-        ${shown && !gone && !here.length ? `<p class="ad-sec-note">Раздел пустой, гости его пока не видят. Нажмите «+ Блюдо» и выберите этот раздел.</p>` : ""}
-        ${items.map(row).join("")}
+        ${shown || gone || st.sort ? "" : `<p class="ad-sec-note">Гости не видят этот раздел и его блюда. Включите тумблер, и раздел вернётся в меню.</p>`}
+        ${shown && !gone && !st.sort && !here.length ? `<p class="ad-sec-note">Раздел пустой, гости его пока не видят. Нажмите «+ Блюдо» и выберите этот раздел.</p>` : ""}
+        ${items.map((it, i) => row(it, same(items[i - 1], it, L.rank), same(items[i + 1], it, L.rank))).join("")}
       </section>`;
     }).join("");
-    const top = gone ? `<p class="ad-sec-note">Удалённые блюда гости не видят. Нажмите «Вернуть», и блюдо снова в меню на прежнем месте.</p>` : "";
+    const top = gone ? `<p class="ad-sec-note">Удалённые блюда гости не видят. Нажмите «Вернуть», и блюдо снова в меню на прежнем месте.</p>`
+      : st.sort ? `<p class="ad-sec-note">Кнопками «Выше» и «Ниже» двигайте разделы и блюда. Гости увидят новый порядок при следующем открытии меню. Скрытые и «нет в наличии» всегда стоят ниже остальных.</p>` : "";
     box.innerHTML = top + (html || `<p class="ad-empty">${gone ? "Удалённых блюд нет." : "Ничего не нашлось."}</p>`);
-    if (move) slide(box, was);
+    if (keep && keep in was) {
+      const el = box.querySelector(`[data-row="${CSS.escape(keep)}"]`);
+      if (el) window.scrollBy(0, el.getBoundingClientRect().top - was[keep]);
+    }
+    if (move) slide(box, was, keep);
+  }
+
+  // Режим «Порядок»: поменять местами с соседом выше или ниже. Записывается весь порядок разделов или блюд раздела.
+  async function shift(kind, id, dir) {
+    const m = st.menu.menu;
+    let arr, a, view, r;
+    if (kind === "s") {
+      arr = m; a = m.find((g) => g.id === id); view = L.sortSections(m); r = (g) => (g.hidden ? 1 : 0);
+    } else {
+      const g = m.find((x) => x.items.some((it) => it.id === id));
+      if (!g) return;
+      arr = g.items; a = arr.find((it) => it.id === id); view = L.sortItems(arr.filter((it) => !it.deleted)); r = L.rank;
+    }
+    const b = view[view.indexOf(a) + dir];
+    if (!a || !b || r(a) !== r(b)) return;
+    const swap = () => { const i = arr.indexOf(a), j = arr.indexOf(b); arr[i] = b; arr[j] = a; };
+    swap();
+    const key = kind === "s" ? "s:" + id : id;
+    list(true, key);
+    const ids = arr.map((x) => x.id);
+    const sec = kind === "s" ? null : m.find((g) => g.items === arr);
+    const ok = sec ? await act.sortItems(sec.id, ids) : await act.sortSections(ids);
+    if (!ok) { swap(); list(true); }
   }
 
   // Переезд: строка едет со старого места на новое, раздел едет целиком.
   // Полсекунды после переезда нажатия в списке не срабатывают: на место уехавшей строки встаёт соседняя,
   // и второе нажатие попало бы в чужое блюдо (так 2026-11-08 удалился «Гамбургер»).
-  function slide(box, was) {
+  function slide(box, was, keep) {
     const els = Array.from(box.querySelectorAll("[data-row]")), dy = new Map();
     els.forEach((el) => dy.set(el, (el.dataset.row in was ? was[el.dataset.row] : NaN) - el.getBoundingClientRect().top));
     let moved = false;
@@ -150,7 +195,9 @@ export function createUI(act) {
       moved = true;
       if (!reduced() && el.animate) el.animate([{ transform: `translateY(${d}px)` }, { transform: "none" }], { duration: 320, easing: "cubic-bezier(.2,.8,.2,1)" });
     });
-    if (moved) st.lock = Date.now() + 600;
+    // Строка осталась под пальцем (режим «Порядок»): второе нажатие попадёт в неё же, ждать не нужно
+    const held = keep && box.querySelector(`[data-row="${CSS.escape(keep)}"]`);
+    if (moved && !(held && Math.abs(dy.get(held)) < 2)) st.lock = Date.now() + 600;
   }
 
   function team() {
@@ -179,7 +226,8 @@ export function createUI(act) {
           <p class="ad-note" id="adFresh"></p>
           <div id="adSet"></div>
           <div class="ad-tabs" id="adTabs" role="tablist"></div>
-          <label class="ad-search">${svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>')}<input type="search" id="adQ" placeholder="Найти блюдо" autocomplete="off" aria-label="Найти блюдо"></label>
+          <button type="button" class="ad-sort-btn" id="adSort" aria-pressed="false"></button>
+          <label class="ad-search" id="adSearch">${svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>')}<input type="search" id="adQ" placeholder="Найти блюдо" autocomplete="off" aria-label="Найти блюдо"></label>
         </div>
         <div id="adList"></div>
         ${settings.sectionForm()}
@@ -195,6 +243,11 @@ export function createUI(act) {
       return `<button type="button" role="tab" aria-selected="${st.filter === id}" data-filter="${id}">${name} <span>${n}</span></button>`;
     }).join("");
     $("adSet").innerHTML = settings.card(menu.order);
+    // Режим «Порядок»: вкладки и поиск прячутся, видны все блюда, кроме удалённых
+    $("adTabs").hidden = $("adSearch").hidden = $("adSet").hidden = st.sort;
+    if (st.sort) $("adFresh").hidden = true;
+    $("adSort").textContent = st.sort ? "Готово" : "Изменить порядок";
+    $("adSort").setAttribute("aria-pressed", String(st.sort));
     $("adTeam").innerHTML = team();
     list(move);
   }
@@ -314,6 +367,13 @@ export function createUI(act) {
     if (t.id === "adOut") return act.signOut();
     if (t.id === "adAdd") return editor(null);
     if (d.filter) { st.filter = d.filter; render(st.menu, st.admins, st.email, false); return; }
+    if (t.id === "adSort") {
+      st.sort = !st.sort;
+      if (st.sort) { st.filter = "all"; st.q = ""; $("adQ").value = ""; }
+      render(st.menu, st.admins, st.email, false);
+      return;
+    }
+    if (d.move) return shift(d.move, d.id, Number(d.dir));
     if (d.edit) return editor(d.edit);
     // Тумблеры меняются на экране сразу, запись в базу идёт следом. Не записалось: тумблер встаёт назад.
     if (d.toggle) {

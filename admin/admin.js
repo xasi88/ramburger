@@ -7,8 +7,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=f8217dbc";
-import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=f8217dbc";
+import { createUI } from "./ui.js?v=098e48f8";
+import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=098e48f8";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -30,7 +30,8 @@ const draw = () => ui.render(L.merge(BASE, live, { deleted: true }), TG ? null :
 const said = (e) => (e && e.code === "permission-denied" ? "Нет прав на правку меню" : "Не сохранилось. Проверьте интернет и попробуйте ещё раз.");
 
 // Записать правку: change(правки) меняет объект правок на месте. id: блюдо, для копии автору из Telegram.
-async function save(change, note, id) {
+// quiet: копию автору не слать (порядок: каждое нажатие стрелки было бы письмом).
+async function save(change, note, id, quiet) {
   try {
     let json = "", bylo = null;
     await runTransaction(db, async (tx) => {
@@ -47,7 +48,7 @@ async function save(change, note, id) {
     addDoc(collection(db, "history"), { json, at: serverTimestamp(), by: kto }).catch(() => { /* копия не главное */ });
     // Правка Ильяса из Telegram: бот пришлёт автору, что изменилось (как о правке в чате).
     // Запрос к боту до ~4 КБ (больше Cloudflare из России не принимает): длинная правка уходит одной заметкой.
-    if (TG) {
+    if (TG && !quiet) {
       const telo = id ? { id, bylo } : { zametka: note };
       tgKopiya(JSON.stringify(telo).length < 2500 ? telo : { zametka: note });
     }
@@ -75,6 +76,14 @@ const ui = createUI({
   // Тумблер раздела. Название и отметку нового раздела не трогаем.
   section: (id, hidden) => save((cur) => { cur.sections[id] = Object.assign(cur.sections[id] || {}, { hidden }); },
     `Раздел «${razdel(id)}» ` + (hidden ? "скрыт от гостей" : "снова в меню")),
+
+  // Порядок вручную (js/live.js, sort): весь список разделов или блюд раздела
+  sortSections: (ids) => save((cur) => { cur.sort = cur.sort || {}; cur.sort.sections = ids; }, "Порядок разделов сохранён", null, true),
+  sortItems: (sec, ids) => save((cur) => {
+    cur.sort = cur.sort || {};
+    cur.sort.items = cur.sort.items || {};
+    cur.sort.items[sec] = ids;
+  }, "Порядок блюд сохранён", null, true),
 
   // Новый раздел встаёт в конец меню. Удалить можно только его и только пустой (проверка в settings.js).
   addSection: (title) => save((cur) => { cur.sections["s" + Date.now().toString(36)] = { title, added: true }; }, `Раздел «${title}» добавлен. Добавьте в него блюдо.`),

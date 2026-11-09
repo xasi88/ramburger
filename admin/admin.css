@@ -87,6 +87,16 @@
 .ad-tg i { font: 800 13px/22px var(--body); font-style: normal; }
 .ad-tg.on { background: var(--coal); color: #fff; }
 .ad-tg.ad-hit.on { background: var(--red); }
+.ad-tg:disabled { opacity: 0.3; }
+.ad-tg:disabled:active { transform: none; }
+.ad-sec-tools { display: flex; align-items: center; gap: 6px; }
+
+/* Режим «Порядок» (ui.js, shift) */
+.ad-sort-btn {
+  min-height: 48px; padding: 0 16px; border: 0; border-radius: 14px; background: var(--cream); color: var(--coal);
+  font: 700 15px/1 var(--body); box-shadow: inset 0 0 0 2px var(--coal);
+}
+.ad-sort-btn[aria-pressed="true"] { background: var(--coal); color: #fff; }
 
 /* Кнопка «+ Блюдо» */
 .ad-add {
@@ -122,7 +132,8 @@
 .ad-set { padding: 20px 18px 22px; display: grid; gap: 16px; }
 .ad-set h2 { font: 800 22px/1.2 var(--head); padding-right: 44px; }
 .ad-set-hint { font-size: 12.5px; font-weight: 600; color: var(--tobacco); }
-.ad-opt [data-plprice] { width: 84px; flex: none; font-weight: 800; }
+/* Сильнее общего правила полей (.ad input: ширина 100%), иначе название села сжато в полоску */
+.ad .ad-opt input[data-plprice] { width: 84px; flex: none; font-weight: 800; }
 .ad-secadd { margin-top: 32px; padding: 18px 16px; border-radius: 18px; background: var(--cream); box-shadow: var(--shadow); display: grid; gap: 10px; }
 .ad-secadd h2 { font: 800 20px/1.2 var(--head); }
 .ad-secadd p { font-size: 13.5px; color: var(--tobacco); }
@@ -157,7 +168,8 @@
 .ad-price input { max-width: 160px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .ad-price span, .ad-opt span { font-weight: 800; }
 .ad-opt { margin-bottom: 8px; }
-.ad-opt [data-optp] { width: 96px; flex: none; font-weight: 800; }
+.ad .ad-opt input[data-optp] { width: 96px; flex: none; font-weight: 800; }
+.ad .ad-opt input { flex: 1; min-width: 0; }
 .ad-link {
   min-height: 44px; padding: 0 2px; border: 0; background: none; color: var(--coal);
   font: 700 14px/1.2 var(--body); text-decoration: underline; text-underline-offset: 3px; text-align: left;

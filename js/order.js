@@ -22,7 +22,8 @@ window.OrderView = (function () {
       <div class="o-chips" role="radiogroup" aria-label="${label}">${list.map(([v, sub]) =>
         `<button type="button" role="radio" aria-checked="false" data-${kind}="${esc(v)}"><b>${esc(v)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`).join("")}</div></div>`;
   }
-  const feeOf = (price) => (price === null ? "цену скажет кафе" : price ? cart.rub(price) : "бесплатно");
+  // Цена не задана: текст кафе (у Рамбургера «по тарифу такси», js/live.js, noPrice)
+  const feeOf = (price) => (price === null ? O.noPrice : price ? cart.rub(price) : "бесплатно");
 
   function skeleton(side) {
     return `
@@ -114,7 +115,7 @@ window.OrderView = (function () {
     update();
   }
 
-  // Цена доставки: число, или null (цену скажет кафе, село не выбрано). С собой: 0.
+  // Цена доставки: число, или null (цена не задана или село не выбрано). С собой: 0.
   const placeOf = () => O.places.find((p) => p.name === state.place);
   function fee() {
     if (state.mode !== "delivery") return 0;
@@ -163,7 +164,7 @@ window.OrderView = (function () {
       q("[data-fee]").textContent = feeText();
       countTo(q("[data-total]"), total(), cart.rub);
       q("[data-total-note]").hidden = !(deliv && f === null);
-      q("[data-total-note]").textContent = placeOf() || !O.places.length ? "Сумма без доставки: её цену скажет кафе." : "Сумма без доставки.";
+      q("[data-total-note]").textContent = placeOf() || !O.places.length ? `Сумма без доставки. Доставка: ${O.noPrice}.` : "Сумма без доставки.";
       el.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === state.mode)));
       const pill = q(".seg-pill");
       if (pill) pill.style.transform = `translateX(${idx * 100}%)`;

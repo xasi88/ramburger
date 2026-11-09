@@ -5,10 +5,13 @@
 //
 // Вид правок: { "items": { "<id>": { name, desc, price, options, photo, icon, hidden, off, hit, discount, section, added, deleted } },
 //               "sections": { "<id>": { hidden, title, added } },
-//               "order": { night, pickup, places: [{ name, price }], pay: ["..."] } }
+//               "order": { night, pickup, places: [{ name, price }], pay: ["..."] },
+//               "sort": { "sections": ["<id>", ...], "items": { "<id раздела>": ["<id блюда>", ...] } } }
 // added: блюдо или раздел создан в админке, в data/menu.js его нет. Новый раздел встаёт в конец меню.
 // deleted: блюдо удалено (админка или бот, 2026-11-08). Гость его не видит, правка остаётся: блюдо можно вернуть.
-// order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому. price null: цену доставки скажет кафе.
+// order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому.
+// price null: цена доставки по тексту noPrice (data/menu.js, у Рамбургера «по тарифу такси»), его нет: «цену скажет кафе».
+// sort: порядок разделов и блюд, который кафе задало вручную в админке (2026-11-09). Чего нет в списке, стоит после, в прежнем порядке.
 
 (function (root) {
   // Адрес проекта Firebase. Это не секрет: доступ решают правила базы (firestore.rules).
@@ -38,7 +41,7 @@
 
   // Заказ у гостя: из файла, поверх правки админки
   function orderOf(base, p) {
-    const o = Object.assign({ night: false, pickup: true, places: [], pay: [] }, copy(base || {}));
+    const o = Object.assign({ night: false, pickup: true, places: [], pay: [], noPrice: "" }, copy(base || {}));
     p = p && typeof p === "object" ? p : {};
     if (typeof p.night === "boolean") o.night = p.night;
     if (typeof p.pickup === "boolean") o.pickup = p.pickup;
@@ -46,6 +49,7 @@
     if (Array.isArray(p.pay)) o.pay = p.pay;
     o.places = o.places.filter((x) => x && String(x.name || "").trim()).map((x) => ({ name: String(x.name).trim(), price: fee(x.price) }));
     o.pay = o.pay.map((x) => String(x || "").trim()).filter(Boolean);
+    o.noPrice = String(o.noPrice || "").trim() || "цену скажет кафе";
     return o;
   }
 
@@ -82,8 +86,21 @@
       }
     });
     data.menu.forEach((g) => { if (secs[g.id] && typeof secs[g.id].hidden === "boolean") g.hidden = secs[g.id].hidden; });
+    // Порядок, заданный вручную: разделы, потом блюда в каждом разделе
+    const sort = live.sort && typeof live.sort === "object" ? live.sort : {};
+    data.menu = byList(data.menu, sort.sections);
+    const its = sort.items && typeof sort.items === "object" ? sort.items : {};
+    data.menu.forEach((g) => { g.items = byList(g.items, its[g.id]); });
     if (!(keep && keep.deleted)) data.menu.forEach((g) => { g.items = g.items.filter((it) => !it.deleted); });
     return data;
+  }
+
+  // Порядок по списку id: что в списке, по списку; чего нет, после, в прежнем порядке
+  function byList(list, ids) {
+    if (!Array.isArray(ids) || !ids.length) return list;
+    const at = new Map(ids.map((id, i) => [String(id), i]));
+    const pos = (x) => (at.has(x.id) ? at.get(x.id) : ids.length);
+    return list.map((x, i) => [x, i]).sort((a, b) => pos(a[0]) - pos(b[0]) || a[1] - b[1]).map((x) => x[0]);
   }
 
   // Гость видит блюдо, если оно не скрыто и не удалено, у него есть название и цена
@@ -96,7 +113,7 @@
 
   // Порядок показа (2026-11-08, решение автора): в разделе сначала блюда в меню, потом «нет в наличии»,
   // скрытые с названием, фото без названия или цены, удалённые. Внутри группы порядок меню.
-  // Порядок в базе не хранится: блюдо, которое снова показали, встаёт на прежнее место.
+  // Блюдо, которое снова показали, встаёт на прежнее место. Порядок внутри группы кафе задаёт вручную (sort).
   const rank = (it) => (it.deleted ? 4 : !named(it) || !priced(it) ? 3 : it.hidden ? 2 : it.off ? 1 : 0);
   const byRank = (list, r) => list.map((x, i) => [x, i]).sort((a, b) => r(a[0]) - r(b[0]) || a[1] - b[1]).map((x) => x[0]);
   const sortItems = (items) => byRank(items, rank);

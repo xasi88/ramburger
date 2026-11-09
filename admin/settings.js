@@ -53,7 +53,7 @@ export function createSettings(h) {
           <input data-plprice="${i}" inputmode="numeric" pattern="[0-9]*" value="${p.price === null ? "" : p.price}" placeholder="?" aria-label="Цена доставки, рублей"><span>₽</span>
           <button type="button" class="ad-mini" data-pldel="${i}" aria-label="Убрать село">×</button>
         </div>`).join("")}
-        <small class="ad-set-hint">Цена пустая: гость увидит «цену доставки скажет кафе». Цена 0: доставка бесплатная.</small>
+        <small class="ad-set-hint">Цена пустая: гость увидит «${esc(h.get().order.noPrice)}». Цена 0: доставка бесплатная.</small>
         <button type="button" class="ad-link" data-pladd>Ещё село</button>
       </div>
       <div class="ad-f"><span>Оплата</span>
