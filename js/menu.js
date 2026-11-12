@@ -62,7 +62,8 @@ window.MenuView = (function () {
     try { gone = !!p && sessionStorage.getItem("rb-promo") === p.text; } catch (e) {}
     if (!p || gone) { el.hidden = true; return; }
     const until = p.until ? `<small>До ${new Date(p.until + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })} включительно</small>` : "";
-    el.innerHTML = `<p><b>Акция</b>${esc(p.text)}${until}</p>
+    const cut = p.percent > 0 ? `<small>Скидка ${p.percent}% на блюда уже в сумме заказа</small>` : "";
+    el.innerHTML = `<p><b>Акция</b>${esc(p.text)}${cut}${until}</p>
       <button type="button" class="promo-x" aria-label="Скрыть акцию">×</button>`;
     el.hidden = false;
     el.querySelector(".promo-x").addEventListener("click", () => {

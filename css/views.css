@@ -78,6 +78,8 @@
 @keyframes shake { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
 .o-sums { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; margin: 16px 4px 6px; font-size: 15px; font-weight: 600; }
 .o-sums b { font-variant-numeric: tabular-nums; }
+.o-sums [hidden] { display: none; }
+.o-promo-cut { color: var(--coal); }
 .o-total { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 4px 14px; padding-top: 10px; border-top: 2px dashed rgba(20, 18, 16, 0.25); }
 .o-total span { font: 800 20px/1 var(--body); }
 .o-total b { font: 800 28px/1 var(--body); font-variant-numeric: tabular-nums; }

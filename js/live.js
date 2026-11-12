@@ -7,12 +7,13 @@
 //               "sections": { "<id>": { hidden, title, added } },
 //               "order": { night, pickup, places: [{ name, price }], pay: ["..."] },
 //               "sort": { "sections": ["<id>", ...], "items": { "<id раздела>": ["<id блюда>", ...] } },
-//               "promo": { active, text, until } }
+//               "promo": { active, text, until, percent } }
 // added: блюдо или раздел создан в админке, в data/menu.js его нет. Новый раздел встаёт в конец меню.
 // deleted: блюдо удалено (админка или бот, 2026-11-08). Гость его не видит, правка остаётся: блюдо можно вернуть.
 // order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому.
 // price null: цена доставки по тексту noPrice (data/menu.js, у Рамбургера «по тарифу такси»), его нет: «цену скажет кафе».
 // promo: акция в меню (2026-11-12). Баннер вверху меню и строка «Акция» в заказе. until: последний день, "" без срока.
+// promo.percent: скидка по акции на блюда, 0-90 %, без доставки. 0: акция без скидки.
 // sort: порядок разделов и блюд, который кафе задало вручную в админке (2026-11-09). Чего нет в списке, стоит после, в прежнем порядке.
 
 (function (root) {
@@ -59,7 +60,9 @@
   function promoOf(p) {
     p = p && typeof p === "object" ? p : {};
     const until = /^\d{4}-\d{2}-\d{2}$/.test(String(p.until || "")) ? String(p.until) : "";
-    return { active: p.active === true, text: String(p.text || "").replace(/\s+/g, " ").trim().slice(0, 120), until };
+    const n = Math.round(Number(p.percent));
+    const percent = isFinite(n) && n > 0 ? Math.min(n, 90) : 0;
+    return { active: p.active === true, text: String(p.text || "").replace(/\s+/g, " ").trim().slice(0, 120), until, percent };
   }
 
   // Открыто ли кафе сейчас: часы по Москве

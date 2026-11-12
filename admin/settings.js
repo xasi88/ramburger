@@ -27,7 +27,7 @@ export function createSettings(h) {
   let pe = null;
   function promoCard(p) {
     const on = p && p.active && p.text;
-    const note = on ? `Включена: «${p.text}»${p.until ? `, до ${dateRu(p.until)}` : ""}` : "Выключена. Гости баннер не видят.";
+    const note = on ? `Включена: «${p.text}»${p.percent ? `, скидка ${p.percent}%` : ""}${p.until ? `, до ${dateRu(p.until)}` : ""}` : "Выключена. Гости баннер не видят.";
     return `<button type="button" class="ad-set-open ad-promo-open" data-promoopen>
       <span><b>Акция в меню</b><small>${esc(note)}</small></span><i>Изменить</i></button>`;
   }
@@ -40,6 +40,10 @@ export function createSettings(h) {
       <label class="ad-f"><span>Текст акции</span>
         <textarea id="adPromoText" maxlength="120" rows="3" placeholder="Например: первый заказ через меню, доставка бесплатно">${esc(pe.text)}</textarea>
         <small class="ad-set-hint">Коротко, до 120 знаков. Пишите только то, что кафе точно даст.</small>
+      </label>
+      <label class="ad-f"><span>Скидка по акции, %</span>
+        <div class="ad-price"><input id="adPromoPercent" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="${pe.percent || ""}" placeholder="0" aria-label="Скидка по акции, процентов"><span>%</span></div>
+        <small class="ad-set-hint">Скидка на все блюда в заказе, доставка без скидки. Сумма в корзине и в WhatsApp считается сама. Пусто или 0: акция без скидки. Не больше 90 %.</small>
       </label>
       <label class="ad-f"><span>Последний день акции</span>
         <input id="adPromoUntil" type="date" value="${esc(pe.until)}" aria-label="Последний день акции">
@@ -54,9 +58,11 @@ export function createSettings(h) {
 
   async function savePromo(btn) {
     const text = clean($("adPromoText").value).slice(0, 120), until = $("adPromoUntil").value || "";
+    const raw = $("adPromoPercent").value.trim(), percent = raw === "" ? 0 : Number(raw);
     if (pe.active && !text) return h.toast("Впишите текст акции");
+    if (!Number.isInteger(percent) || percent < 0 || percent > 90) return h.toast("Скидка: целое число от 0 до 90");
     btn.disabled = true;
-    const ok = await h.act.setPromo({ active: !!pe.active, text, until });
+    const ok = await h.act.setPromo({ active: !!pe.active, text, until, percent });
     btn.disabled = false;
     if (ok) { pe = null; h.closeSheet(); }
   }
@@ -142,7 +148,7 @@ export function createSettings(h) {
     const t = ev.target.closest("button");
     if (!t) return;
     const d = t.dataset;
-    if (d.promoopen !== undefined) { pe = Object.assign({ active: false, text: "", until: "" }, h.get().promo || {}); return drawPromo(); }
+    if (d.promoopen !== undefined) { pe = Object.assign({ active: false, text: "", until: "", percent: 0 }, h.get().promo || {}); return drawPromo(); }
     if (pe && t.closest(".ad-promo")) {
       if (d.promosw !== undefined) { pe.active = !pe.active; t.classList.toggle("on", pe.active); t.setAttribute("aria-checked", pe.active); return; }
       if (d.promosave !== undefined) return savePromo(t);

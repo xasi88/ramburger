@@ -50,6 +50,7 @@ window.OrderView = (function () {
         </div>
         <div class="o-sums">
           <span>Блюда</span><b data-sum></b>
+          <span data-promo-name hidden></span><b class="o-promo-cut" data-promo-cut hidden></b>
           <span data-fee-name>Доставка</span><b data-fee></b>
         </div>
         <div class="o-total"><span>Итого</span><b data-total></b></div>
@@ -132,7 +133,8 @@ window.OrderView = (function () {
     // Акция из админки: кафе сразу видит, что гостю положено по акции
     const pr = window.Data.promo && window.Data.promo();
     if (pr) out.splice(1, 0, `Акция: ${pr.text}`);
-    out.push(`Блюда: ${cart.rub(sm.total)}`);
+    out.push(`Блюда: ${cart.rub(sm.sum - sm.discount)}`);
+    if (sm.promoCut > 0) out.push(`Скидка по акции ${sm.promoPercent}%: −${cart.rub(sm.promoCut)}`);
     if (deliv) out.push(`Доставка: ${feeOf(f)}`);
     out.push(deliv && f === null ? `*Итого без доставки: ${cart.rub(total())}*` : `*Итого: ${cart.rub(total())}*`, "");
     if (deliv) {
@@ -162,7 +164,11 @@ window.OrderView = (function () {
         <li class="o-line"><span class="art">${art(info.art)}</span>
           <div><b>${esc(info.name)}</b><span>${cart.rub(info.price)} × ${qty} = ${cart.rub(info.price * qty)}</span></div>
           <span data-ctl="${key}">${ctl(key)}</span></li>`).join("");
-      countTo(q("[data-sum]"), cart.summary().total, cart.rub);
+      const sm = cart.summary();
+      countTo(q("[data-sum]"), sm.sum - sm.discount, cart.rub);
+      q("[data-promo-name]").hidden = q("[data-promo-cut]").hidden = !(sm.promoCut > 0);
+      q("[data-promo-name]").textContent = `Скидка по акции ${sm.promoPercent}%`;
+      q("[data-promo-cut]").textContent = "−" + cart.rub(sm.promoCut);
       q("[data-fee-name]").hidden = q("[data-fee]").hidden = !deliv;
       q("[data-fee]").textContent = feeText();
       countTo(q("[data-total]"), total(), cart.rub);

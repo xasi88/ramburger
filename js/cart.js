@@ -38,12 +38,16 @@ window.Cart = (function () {
   const rub = (n) => n.toLocaleString("ru-RU") + " ₽";
   const sum = () => Object.keys(state).reduce((s, k) => s + info(k).price * state[k], 0);
 
-  // Итог со скидкой на заказ от суммы
+  // Итог со скидкой на заказ от суммы и скидкой по акции из админки (2026-11-12).
+  // Скидка акции считается от суммы блюд (цены блюд уже со своими скидками), доставка не входит. Рубли округляются.
   function summary() {
     const s = sum();
     const b = D.bonus();
     const discount = b && s >= b.min ? Math.round((s * b.percent) / 100) : 0;
-    return { sum: s, discount, total: s - discount, bonus: b, need: b && s < b.min ? b.min - s : 0 };
+    const p = D.promo && D.promo();
+    const promoPercent = p && p.percent > 0 ? p.percent : 0;
+    const promoCut = Math.round(((s - discount) * promoPercent) / 100);
+    return { sum: s, discount, promoPercent, promoCut, total: s - discount - promoCut, bonus: b, need: b && s < b.min ? b.min - s : 0 };
   }
 
   return {
