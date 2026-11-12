@@ -4,6 +4,7 @@
 // В разделе сначала то, что можно заказать, «нет в наличии» в конце (Live.sortItems, 2026-11-08).
 // Комбо со своей ценой из нескольких блюд (promos.combos) у кафе нет: корзина их понимает.
 // Заказ у гостя (ночью, с собой, сёла, оплата): window.ORDER, вид в js/live.js.
+// Акция в меню из админки (2026-11-12): Data.promo(), баннер в js/menu.js, строка в заказе в js/order.js.
 
 (function () {
   const src = window.MENU_DATA;
@@ -38,7 +39,8 @@
   const minPrice = (it) => (it.options && it.options.length ? Math.min(...it.options.map((o) => o.price)) : it.price);
 
   // Акция действует, если включена и срок не прошёл (until: "2026-12-31" включительно)
-  const today = () => new Date().toISOString().slice(0, 10);
+  // Сегодня по Москве: срок кончается в полночь у кафе, а не в 3 часа ночи
+  const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Moscow" }).format(new Date());
   const live = (x) => x && x.active !== false && (!x.until || x.until >= today());
 
   function comboFull(c) {
@@ -55,6 +57,8 @@
     comboFull,
     combos: () => promos.combos.filter(comboOk),
     combo: (id) => promos.combos.find((c) => c.id === id && comboOk(c)),
+    // Акция видна гостю: включена, есть текст, срок не прошёл
+    promo: () => { const p = window.Live.promoOf(src.promo); return p.active && p.text && live(p) ? p : null; },
     bonus: () => (live(promos.bonus) && promos.bonus.percent > 0 ? promos.bonus : null),
     deliveryText,
     // Заказ можно отправить: кафе открыто или ночью заказы принимают

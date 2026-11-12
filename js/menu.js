@@ -47,11 +47,28 @@ window.MenuView = (function () {
       </ol>
       <p class="terms"><span>${ico.truck}${esc(window.Data.deliveryText())}</span>${window.ORDER.pickup ? `<span>${ico.walk}С собой</span>` : ""}<span>${ico.clock}${C.open}:00 - ${C.close}:00</span></p>`;
 
+    promo();
     $("groups").innerHTML = M.filter((g) => g.items.length).map(section).join("");
     $("chipsTrack").insertAdjacentHTML("beforeend", sections.map((s) => `<button class="chip" type="button" data-cat="${s.id}">${esc(s.title)}</button>`).join(""));
     document.querySelectorAll("#groups .grid").forEach((grid) => [...grid.children].forEach(observe));
     $("demoNote").hidden = !C.demo;
     setupChips();
+  }
+
+  // Акция из админки над первым экраном. «Закрыть» прячет её до конца визита (sessionStorage может не работать: тогда просто прячем).
+  function promo() {
+    const p = window.Data.promo(), el = $("promo");
+    let gone = false;
+    try { gone = !!p && sessionStorage.getItem("rb-promo") === p.text; } catch (e) {}
+    if (!p || gone) { el.hidden = true; return; }
+    const until = p.until ? `<small>До ${new Date(p.until + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" })} включительно</small>` : "";
+    el.innerHTML = `<p><b>Акция</b>${esc(p.text)}${until}</p>
+      <button type="button" class="promo-x" aria-label="Скрыть акцию">×</button>`;
+    el.hidden = false;
+    el.querySelector(".promo-x").addEventListener("click", () => {
+      el.hidden = true;
+      try { sessionStorage.setItem("rb-promo", p.text); } catch (e) {}
+    });
   }
 
   // Полоса разделов: подложка едет к текущему разделу

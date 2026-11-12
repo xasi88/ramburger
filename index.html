@@ -43,13 +43,13 @@
 
   <!-- Правки админки: запрос к базе уходит сразу, пока грузится страница -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-  <script src="js/live.js?v=5dcf96cd" data-early></script>
+  <script src="js/live.js?v=f6a3a6fe" data-early></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/base.css?v=5dcf96cd">
-  <link rel="stylesheet" href="css/menu.css?v=5dcf96cd">
-  <link rel="stylesheet" href="css/views.css?v=5dcf96cd">
+  <link rel="stylesheet" href="css/base.css?v=f6a3a6fe">
+  <link rel="stylesheet" href="css/menu.css?v=f6a3a6fe">
+  <link rel="stylesheet" href="css/views.css?v=f6a3a6fe">
 </head>
 <body>
   <noscript>
@@ -75,6 +75,7 @@
     <section class="view" id="view-menu" data-view="menu" aria-label="Меню">
       <div class="menu-layout">
         <div class="menu-main">
+          <div class="promo" id="promo" hidden></div>
           <div class="intro" id="intro"></div>
           <nav class="chips" id="chips" aria-label="Разделы меню"><div class="chips-track" id="chipsTrack"><span class="chips-pill" id="chipsPill"></span></div></nav>
           <div id="groups"></div>
@@ -134,8 +135,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <span class="flyer" id="flyer" aria-hidden="true"></span>
 
-  <script src="data/menu.js?v=5dcf96cd"></script>
+  <script src="data/menu.js?v=f6a3a6fe"></script>
   <!-- boot.js ждёт правки админки из базы (js/live.js в head) и потом подключает остальной код меню -->
-  <script src="js/boot.js?v=5dcf96cd"></script>
+  <script src="js/boot.js?v=f6a3a6fe"></script>
 </body>
 </html>

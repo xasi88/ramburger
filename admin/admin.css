@@ -129,6 +129,8 @@
 .ad-set-open b { font: 800 16px/1.2 var(--body); }
 .ad-set-open small { font-size: 13px; font-weight: 600; color: var(--tobacco); }
 .ad-set-open i { flex: none; padding: 10px 12px; border-radius: 12px; background: var(--coal); color: #fff; font: 700 14px/1 var(--body); }
+.ad-promo-open { margin-top: 10px; }
+.ad-promo textarea { width: 100%; resize: vertical; font: 600 15px/1.4 var(--body); }
 .ad-set { padding: 20px 18px 22px; display: grid; gap: 16px; }
 .ad-set h2 { font: 800 22px/1.2 var(--head); padding-right: 44px; }
 .ad-set-hint { font-size: 12.5px; font-weight: 600; color: var(--tobacco); }

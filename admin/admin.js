@@ -7,8 +7,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction, serverTimestamp, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import { createUI } from "./ui.js?v=5dcf96cd";
-import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=5dcf96cd";
+import { createUI } from "./ui.js?v=f6a3a6fe";
+import { TG, tgStart, tgVhod, tgFoto, tgKopiya, tgZakryt, tgOtkaz, tgZagruzitFoto } from "./tg.js?v=f6a3a6fe";
 
 const L = window.Live;
 const BASE = window.MENU_DATA;
@@ -91,6 +91,8 @@ const ui = createUI({
 
   // Заказ у гостей: ночью, с собой, сёла с ценой, оплата (вид: js/live.js)
   setOrder: (order) => save((cur) => { cur.order = order; }, "Настройки заказа сохранены"),
+  // Акция в меню (2026-11-12): баннер у гостей и строка «Акция» в заказе
+  setPromo: (promo) => save((cur) => { cur.promo = promo; }, promo.active ? "Акция в меню включена" : "Акция выключена"),
 
   // Окно блюда: всё, что в нём, ложится в правку целиком
   saveItem(id, e) {

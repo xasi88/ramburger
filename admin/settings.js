@@ -1,4 +1,4 @@
-// Админка: настройки заказа у гостей (ночные заказы, «с собой», сёла доставки с ценой, оплата) и новые разделы меню.
+// Админка: настройки заказа у гостей (ночные заказы, «с собой», сёла доставки с ценой, оплата), акция в меню и новые разделы меню.
 // Вид настроек: js/live.js (order, sections). Запись в базу: admin.js (setOrder, addSection, removeSection).
 // Экраны блюд и общий список: ui.js. Отсюда он берёт только кнопку настроек и форму нового раздела.
 
@@ -20,6 +20,45 @@ export function createSettings(h) {
   function card(o) {
     return `<button type="button" class="ad-set-open" data-setopen>
       <span><b>Заказ у гостей</b><small>${esc(summary(o))}</small></span><i>Изменить</i></button>`;
+  }
+
+  // Акция в меню (2026-11-12): кнопка на главном экране и окно
+  const dateRu = (d) => new Date(d + "T12:00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+  let pe = null;
+  function promoCard(p) {
+    const on = p && p.active && p.text;
+    const note = on ? `Включена: «${p.text}»${p.until ? `, до ${dateRu(p.until)}` : ""}` : "Выключена. Гости баннер не видят.";
+    return `<button type="button" class="ad-set-open ad-promo-open" data-promoopen>
+      <span><b>Акция в меню</b><small>${esc(note)}</small></span><i>Изменить</i></button>`;
+  }
+
+  function drawPromo() {
+    const on = !!pe.active;
+    h.openSheet(`<div class="ad-set ad-promo">
+      <h2 id="adSheetTitle">Акция в меню</h2>
+      <button type="button" class="ad-sw ad-sw-row${on ? " on" : ""}" role="switch" aria-checked="${on}" data-promosw><i></i><span><b>Показывать акцию</b><small>Гости видят её вверху меню. В заказе WhatsApp будет строка «Акция: ...».</small></span></button>
+      <label class="ad-f"><span>Текст акции</span>
+        <textarea id="adPromoText" maxlength="120" rows="3" placeholder="Например: первый заказ через меню, доставка бесплатно">${esc(pe.text)}</textarea>
+        <small class="ad-set-hint">Коротко, до 120 знаков. Пишите только то, что кафе точно даст.</small>
+      </label>
+      <label class="ad-f"><span>Последний день акции</span>
+        <input id="adPromoUntil" type="date" value="${esc(pe.until)}" aria-label="Последний день акции">
+        <small class="ad-set-hint">Пусто: акция идёт, пока вы её не выключите. После этого дня баннер пропадёт сам.</small>
+      </label>
+      <div class="ad-ed-actions">
+        <button type="button" class="btn btn-main btn-wide" data-promosave>Сохранить</button>
+        <button type="button" class="btn btn-soft btn-wide" data-close>Отмена</button>
+      </div>
+    </div>`);
+  }
+
+  async function savePromo(btn) {
+    const text = clean($("adPromoText").value).slice(0, 120), until = $("adPromoUntil").value || "";
+    if (pe.active && !text) return h.toast("Впишите текст акции");
+    btn.disabled = true;
+    const ok = await h.act.setPromo({ active: !!pe.active, text, until });
+    btn.disabled = false;
+    if (ok) { pe = null; h.closeSheet(); }
   }
 
   // Форма нового раздела под списком блюд
@@ -103,6 +142,11 @@ export function createSettings(h) {
     const t = ev.target.closest("button");
     if (!t) return;
     const d = t.dataset;
+    if (d.promoopen !== undefined) { pe = Object.assign({ active: false, text: "", until: "" }, h.get().promo || {}); return drawPromo(); }
+    if (pe && t.closest(".ad-promo")) {
+      if (d.promosw !== undefined) { pe.active = !pe.active; t.classList.toggle("on", pe.active); t.setAttribute("aria-checked", pe.active); return; }
+      if (d.promosave !== undefined) return savePromo(t);
+    }
     if (d.setopen !== undefined) { ed = JSON.parse(JSON.stringify(h.get().order)); return draw(); }
     // Удалить можно только раздел из админки и только пустой: блюда сначала переносят
     if (d.delsec) {
@@ -133,5 +177,5 @@ export function createSettings(h) {
     if (await h.act.addSection(name)) $("adSecName").value = "";
   });
 
-  return { card, sectionForm };
+  return { card, promoCard, sectionForm };
 }

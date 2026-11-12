@@ -6,11 +6,13 @@
 // Вид правок: { "items": { "<id>": { name, desc, price, options, photo, icon, hidden, off, hit, discount, section, added, deleted } },
 //               "sections": { "<id>": { hidden, title, added } },
 //               "order": { night, pickup, places: [{ name, price }], pay: ["..."] },
-//               "sort": { "sections": ["<id>", ...], "items": { "<id раздела>": ["<id блюда>", ...] } } }
+//               "sort": { "sections": ["<id>", ...], "items": { "<id раздела>": ["<id блюда>", ...] } },
+//               "promo": { active, text, until } }
 // added: блюдо или раздел создан в админке, в data/menu.js его нет. Новый раздел встаёт в конец меню.
 // deleted: блюдо удалено (админка или бот, 2026-11-08). Гость его не видит, правка остаётся: блюдо можно вернуть.
 // order: заказ у гостя. night: ночью заказы принимаем. pickup: можно забрать самому.
 // price null: цена доставки по тексту noPrice (data/menu.js, у Рамбургера «по тарифу такси»), его нет: «цену скажет кафе».
+// promo: акция в меню (2026-11-12). Баннер вверху меню и строка «Акция» в заказе. until: последний день, "" без срока.
 // sort: порядок разделов и блюд, который кафе задало вручную в админке (2026-11-09). Чего нет в списке, стоит после, в прежнем порядке.
 
 (function (root) {
@@ -53,6 +55,13 @@
     return o;
   }
 
+  // Акция в меню: текст до 120 знаков, срок в виде 2026-12-31 или пусто
+  function promoOf(p) {
+    p = p && typeof p === "object" ? p : {};
+    const until = /^\d{4}-\d{2}-\d{2}$/.test(String(p.until || "")) ? String(p.until) : "";
+    return { active: p.active === true, text: String(p.text || "").replace(/\s+/g, " ").trim().slice(0, 120), until };
+  }
+
   // Открыто ли кафе сейчас: часы по Москве
   function openNow(cafe, date) {
     const h = Number(new Intl.DateTimeFormat("ru-RU", { hour: "numeric", hourCycle: "h23", timeZone: "Europe/Moscow" }).format(date || new Date()));
@@ -64,6 +73,7 @@
     const data = copy(base);
     live = live && typeof live === "object" ? live : {};
     data.order = orderOf(data.order, live.order);
+    data.promo = promoOf(live.promo);
     const items = live.items || {}, secs = live.sections || {};
     const sectionOf = (id) => data.menu.find((g) => g.id === id);
     // Новые разделы из админки: в конец меню, до блюд, чтобы блюда нашли свой раздел
@@ -137,7 +147,7 @@
     }
   }
 
-  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, rank, sortItems, sortSections, fetchLive, orderOf, openNow, fee };
+  root.Live = { FB, CACHE, FIELDS, merge, visible, priced, rank, sortItems, sortSections, fetchLive, orderOf, promoOf, openNow, fee };
 
   // В меню файл стоит в <head> с отметкой data-early: запрос к базе уходит сразу, пока грузится страница.
   // Первый запрос к серверу Google бывает дольше 2 секунд (2026-11-05: 2,5 с, меню взяло старую копию).

@@ -1,8 +1,8 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=5dcf96cd";
-import { versiiStroka, versiiOkno } from "./versii.js?v=5dcf96cd";
+import { createSettings } from "./settings.js?v=f6a3a6fe";
+import { versiiStroka, versiiOkno } from "./versii.js?v=f6a3a6fe";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -242,7 +242,7 @@ export function createUI(act) {
       if (id === "deleted" && !n && st.filter !== id) return "";
       return `<button type="button" role="tab" aria-selected="${st.filter === id}" data-filter="${id}">${name} <span>${n}</span></button>`;
     }).join("");
-    $("adSet").innerHTML = settings.card(menu.order);
+    $("adSet").innerHTML = settings.card(menu.order) + settings.promoCard(menu.promo);
     // Режим «Порядок»: вкладки и поиск прячутся, видны все блюда, кроме удалённых
     $("adTabs").hidden = $("adSearch").hidden = $("adSet").hidden = st.sort;
     if (st.sort) $("adFresh").hidden = true;

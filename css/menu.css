@@ -4,6 +4,19 @@
 .menu-main { min-width: 0; }
 .side-order { display: none; }
 
+/* Акция из админки над первым экраном */
+.promo {
+  margin-top: 6px; padding: 14px 8px 14px 16px; border-radius: 18px; background: var(--cream); color: var(--coal);
+  display: flex; align-items: flex-start; gap: 8px; box-shadow: var(--shadow); animation: rise 0.7s var(--ease) both;
+}
+.promo[hidden] { display: none; }
+.promo p { flex: 1; min-width: 0; display: grid; gap: 4px; font: 700 15px/1.35 var(--body); }
+.promo p b { justify-self: start; padding: 3px 8px; border-radius: 8px; background: var(--red); color: #fff; font: 800 11px/1.2 var(--body); letter-spacing: 0.06em; text-transform: uppercase; }
+.promo p small { font-size: 12.5px; font-weight: 600; color: var(--tobacco); }
+.promo-x { flex: none; width: 44px; height: 44px; margin: -6px 0; border: 0; border-radius: 12px; background: transparent; color: var(--coal); font: 600 26px/1 var(--body); }
+.promo-x:active { background: rgba(20, 18, 16, 0.1); }
+.promo + .intro { margin-top: 10px; }
+
 /* Первый экран: три шага до заказа */
 .intro {
   margin-top: 6px; padding: 18px 18px 16px; border-radius: 22px; background: var(--coal); color: #fff;

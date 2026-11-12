@@ -129,6 +129,9 @@ window.OrderView = (function () {
     const rows = cart.lines().map(({ info, qty }, i) => `${i + 1}. ${info.name} × ${qty} = ${cart.rub(info.price * qty)}`);
     const sm = cart.summary(), f = fee(), deliv = state.mode === "delivery";
     const out = ["Здравствуйте! Заказ с сайта «Рамбургер».", "", ...rows, ""];
+    // Акция из админки: кафе сразу видит, что гостю положено по акции
+    const pr = window.Data.promo && window.Data.promo();
+    if (pr) out.splice(1, 0, `Акция: ${pr.text}`);
     out.push(`Блюда: ${cart.rub(sm.total)}`);
     if (deliv) out.push(`Доставка: ${feeOf(f)}`);
     out.push(deliv && f === null ? `*Итого без доставки: ${cart.rub(total())}*` : `*Итого: ${cart.rub(total())}*`, "");
