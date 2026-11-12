@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Рамбургер · Меню и заказ в WhatsApp</title>
-  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://ramburger.ru/">
   <meta name="description" content="Меню кафе «Рамбургер»: бургеры, шаурма, пицца и роллы. Соберите заказ и отправьте его в WhatsApp кафе. Доставка по Валерику и соседним сёлам.">
   <meta name="theme-color" content="#EFB017">
 
@@ -21,6 +21,16 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://ramburger.ru/img/og.jpg">
 
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"Restaurant","name":"Рамбургер","alternateName":"Ramburger",
+   "url":"https://ramburger.ru/","image":"https://ramburger.ru/img/og.jpg","logo":"https://ramburger.ru/img/icon-512.png",
+   "telephone":"+7 928 002-68-80","servesCuisine":["Бургеры","Шаурма","Пицца","Суши"],
+   "address":{"@type":"PostalAddress","addressLocality":"Валерик","addressRegion":"Чеченская Республика","addressCountry":"RU"},
+   "areaServed":["Валерик","Гихи","Катар-Юрт"],"openingHours":"Mo-Su 11:00-23:00",
+   "hasMenu":"https://ramburger.ru/","acceptsReservations":false,
+   "sameAs":["https://www.instagram.com/_ramburger_/"]}
+  </script>
+
   <link rel="icon" href="img/favicon.png" type="image/png">
   <link rel="apple-touch-icon" href="img/icon-180.png">
   <link rel="manifest" href="manifest.webmanifest">
@@ -31,15 +41,21 @@
 
   <!-- Правки админки: запрос к базе уходит сразу, пока грузится страница -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-  <script src="js/live.js?v=ea2723a3" data-early></script>
+  <script src="js/live.js?v=5175baa2" data-early></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/base.css?v=ea2723a3">
-  <link rel="stylesheet" href="css/menu.css?v=ea2723a3">
-  <link rel="stylesheet" href="css/views.css?v=ea2723a3">
+  <link rel="stylesheet" href="css/base.css?v=5175baa2">
+  <link rel="stylesheet" href="css/menu.css?v=5175baa2">
+  <link rel="stylesheet" href="css/views.css?v=5175baa2">
 </head>
 <body>
+  <noscript>
+    <h1>Кафе «Рамбургер» в Валерике: меню и заказ в WhatsApp</h1>
+    <p>Суши и фастфуд: бургеры и хот-доги, шаурма и лаваш, пицца, суши, закуски, вок и лапша, горячее, салаты.</p>
+    <p>Каждый день 11:00 - 23:00. Доставка по Валерику, в Гихи и Катар-Юрт, можно забрать с собой.</p>
+    <p>Заказ: <a href="https://wa.me/79280026880">WhatsApp +7 928 002-68-80</a>. Для полного меню включите JavaScript.</p>
+  </noscript>
   <header class="appbar">
     <div class="appbar-in">
       <a class="brand" href="#menu" aria-label="Кафе «Рамбургер», меню">
@@ -116,8 +132,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <span class="flyer" id="flyer" aria-hidden="true"></span>
 
-  <script src="data/menu.js?v=ea2723a3"></script>
+  <script src="data/menu.js?v=5175baa2"></script>
   <!-- boot.js ждёт правки админки из базы (js/live.js в head) и потом подключает остальной код меню -->
-  <script src="js/boot.js?v=ea2723a3"></script>
+  <script src="js/boot.js?v=5175baa2"></script>
 </body>
 </html>
