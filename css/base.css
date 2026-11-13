@@ -63,10 +63,10 @@ h1, h2, h3, p { margin: 0; overflow-wrap: break-word; }
   background: var(--cream); color: var(--coal); text-decoration: none; box-shadow: var(--shadow);
   transition: transform 0.4s var(--spring), background 0.2s;
 }
+button.tool { border: 0; padding: 0; font: inherit; cursor: pointer; }
 .tool svg { width: 22px; height: 22px; }
 .tool:active { transform: scale(0.9); }
 .tool.on { background: var(--coal); color: #fff; }
-
 /* Кнопки: прямоугольник со скруглением, как ценник */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
@@ -112,10 +112,28 @@ body[data-view="order"].has-cart { padding-bottom: 0; }
 .cb-go svg { width: 20px; height: 20px; stroke-width: 2.6; }
 @keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.045); } 100% { transform: scale(1); } }
 
-/* Самый узкий телефон (320 точек): шапка и кнопка корзины компактнее */
-@media (max-width: 359px) {
-  .brand-mark { width: 40px; height: 40px; }
+/* Обычный телефон (360-399): название и три кнопки шапки помещаются */
+@media (max-width: 399px) {
+  .tools { gap: 6px; }
+  .brand { gap: 8px; }
+  .brand-mark { width: 42px; height: 42px; }
   .brand-text b { font-size: 19px; }
+}
+@media (max-width: 374px) {
+  .appbar-in { padding: 0 12px; gap: 8px; }
+  .brand { gap: 6px; }
+  .brand-mark { width: 40px; height: 40px; }
+  .brand-text b { font-size: 17px; }
+  .status { font-size: 11.5px; gap: 5px; }
+}
+/* Самый узкий телефон (320 точек): шапка с тремя кнопками и кнопка корзины компактнее */
+@media (max-width: 359px) {
+  .appbar-in { padding: 0 10px; gap: 6px; }
+  .tools { gap: 6px; }
+  .brand { gap: 6px; }
+  .brand-mark { width: 38px; height: 38px; }
+  .brand-text b { font-size: 16px; }
+  .status { font-size: 11px; gap: 4px; }
   .st-more { display: none; }
   .cartbar { gap: 8px; }
   .cb-bag { width: 42px; height: 42px; }

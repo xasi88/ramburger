@@ -43,13 +43,13 @@
 
   <!-- Правки админки: запрос к базе уходит сразу, пока грузится страница -->
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-  <script src="js/live.js?v=c0a67822" data-early></script>
+  <script src="js/live.js?v=8ad212c9" data-early></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:wght@700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/base.css?v=c0a67822">
-  <link rel="stylesheet" href="css/menu.css?v=c0a67822">
-  <link rel="stylesheet" href="css/views.css?v=c0a67822">
+  <link rel="stylesheet" href="css/base.css?v=8ad212c9">
+  <link rel="stylesheet" href="css/menu.css?v=8ad212c9">
+  <link rel="stylesheet" href="css/views.css?v=8ad212c9">
 </head>
 <body>
   <noscript>
@@ -65,6 +65,7 @@
         <span class="brand-text"><b>Ramburger</b><span class="status" id="status"></span></span>
       </a>
       <nav class="tools" aria-label="Разделы">
+        <button class="tool" type="button" data-install aria-label="Установить меню на телефон"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3M10 18h4"/></svg></button>
         <a class="tool" href="#search" data-go="search" aria-label="Поиск блюда"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></a>
         <a class="tool" href="#cafe" data-go="cafe" aria-label="О кафе: адрес и телефон"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></a>
       </nav>
@@ -135,8 +136,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <span class="flyer" id="flyer" aria-hidden="true"></span>
 
-  <script src="data/menu.js?v=c0a67822"></script>
+  <script src="data/menu.js?v=8ad212c9"></script>
   <!-- boot.js ждёт правки админки из базы (js/live.js в head) и потом подключает остальной код меню -->
-  <script src="js/boot.js?v=c0a67822"></script>
+  <script src="js/boot.js?v=8ad212c9"></script>
 </body>
 </html>

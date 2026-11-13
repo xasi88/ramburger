@@ -1,8 +1,8 @@
 // Экраны админки: вход, список блюд по разделам, окно правки блюда, выбор фото, список админов.
 // Данные и запись в базу: admin.js. Здесь только вид и нажатия. Настройки заказа и новые разделы: settings.js.
 
-import { createSettings } from "./settings.js?v=c0a67822";
-import { versiiStroka, versiiOkno } from "./versii.js?v=c0a67822";
+import { createSettings } from "./settings.js?v=8ad212c9";
+import { versiiStroka, versiiOkno } from "./versii.js?v=8ad212c9";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
